@@ -56,7 +56,15 @@ lib/
   constants.ts             Evidence thresholds + sparkline width
 supabase/
   schema.sql               Table DDL for all 9 tables (verified against live)
+  seed.sql                 The v2 dataset, 8,807 rows, with self-verification
 ```
+
+To stand this up from scratch: run `supabase/schema.sql` then `supabase/seed.sql`
+(the Supabase CLI does both in order on `supabase db reset`). `seed.sql` ends
+with a verification query that returns **0 rows** when everything loaded
+correctly, and one named row per failed assertion otherwise. It truncates before
+inserting, so it is safe to re-run — see the header comment for why `DELETE` and
+`ON CONFLICT` would not be.
 
 ## Things that will bite you if you forget them
 
