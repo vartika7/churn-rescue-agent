@@ -206,15 +206,35 @@ broken. It also means the placeholder data carries **no forward-looking signal
 for active accounts** — which is exactly the gap the Phase 4 risk engine exists
 to fill, and worth remembering before reading anything into that zero.
 
-### Churned accounts' renewal dates
+### Renewal dates, and this dataset's shelf life
 
-Every churned account carries `renewal_date = outcome_date`, which `seed.sql`
-asserts. Retained accounts renew ahead of the snapshot date; churned ones do
-not, so their dates sit in the past.
-
+Churned accounts carry `renewal_date = outcome_date`, which `seed.sql` asserts.
 That is why the Lost accounts view omits the renewal column and the detail page
 swaps it for the churn date — the column would otherwise restate the churn date
 under a heading implying a live contract.
+
+Active accounts were reset to **30 days after their last paid charge**. That
+fixed 11 accounts which were still billing past their own stated next renewal —
+the renewal had never rolled forward, so the dashboard counted down to a date
+the billing record had already passed. `seed.sql` now asserts that case cannot
+recur.
+
+The side effect is that every active renewal landed in one November band,
+because billing is roughly monthly and usage data ends 2026-10-31. Countdowns
+read the real clock, so the buckets move:
+
+| as of      | overdue | amber ≤14d | 15-45d | 46d+ | range     |
+| ---------- | ------- | ---------- | ------ | ---- | --------- |
+| 2026-09-18 | 0       | 0          | 4      | 36   | 44-73d    |
+| +30d       | 0       | 4          | 36     | 0    | 14-43d    |
+| +60d       | 20      | 20         | 0      | 0    | -16-13d   |
+| +90d       | 40      | 0          | 0      | 0    | -46--17d  |
+
+**So the data has a shelf life.** Nothing is amber today, and by about 90 days
+out every active account reads overdue. Before demoing on a given date, check
+where that date falls in the table. The durable fix is to spread `renewal_date`
+over a wider horizon rather than deriving it from the last charge, which by
+construction bunches them into a single month.
 
 C041's `outcome_date` of 2026-09-26 is intentionally left as-is. With countdowns
 on the real clock it needs no separate fix.
