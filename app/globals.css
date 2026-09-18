@@ -135,11 +135,13 @@ h3 {
   letter-spacing: -0.02em;
 }
 
+/* 68ch suited the paragraph this used to be; it is now a one-line status
+   strip, so the cap only needs to stop it running the full page width. */
 .page-desc {
   color: var(--text-dim);
   margin: 6px 0 0;
   font-size: 13px;
-  max-width: 68ch;
+  max-width: 82ch;
 }
 
 .section {

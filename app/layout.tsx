@@ -18,8 +18,9 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Churn Rescue — CS Console",
-  description: "Internal customer-success console for retention risk triage.",
+  title: "Churn Rescue — Customer Success",
+  description:
+    "Internal tool for the customer success team: spot accounts at risk of churning before their renewal.",
 };
 
 export default function RootLayout({
@@ -33,7 +34,9 @@ export default function RootLayout({
         <header className="topbar">
           <div className="topbar-inner">
             <span className="topbar-title">Churn Rescue</span>
-            <span className="topbar-sub">Internal CS console · Phase 3</span>
+            <span className="topbar-sub">
+              Customer success · retention risk triage
+            </span>
           </div>
         </header>
         {children}

@@ -189,13 +189,13 @@ export default async function DashboardPage({
       <div className="page-head">
         <div>
           <h1 className="page-title">Portfolio risk overview</h1>
+          {/* One line on purpose. The date-anchor explanation this used to
+              carry now lives in the per-column tooltips, where it is read at
+              the moment it matters rather than skimmed past up here. */}
           <p className="page-desc">
-            {activeRows.length} active accounts, {lostRows.length} lost. Usage,
-            support and billing data read live from Supabase. Renewal countdowns
-            are measured against today,{" "}
-            <span className="mono">{formatDate(toISODate(realToday))}</span>;
-            usage windows are measured against each account&apos;s own latest
-            recorded day, which is why the two can differ.
+            {activeRows.length} active accounts, {lostRows.length} lost · live
+            from Supabase · today is{" "}
+            <span className="mono">{formatDate(toISODate(realToday))}</span>
           </p>
         </div>
       </div>
