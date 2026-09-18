@@ -56,15 +56,34 @@ lib/
   constants.ts             Evidence thresholds + sparkline width
 supabase/
   schema.sql               Table DDL for all 9 tables (verified against live)
-  seed.sql                 The v2 dataset, 8,807 rows, with self-verification
+  seed.sql                 The v2 dataset as SQL, 8,807 rows, self-verifying
+  seed/*.csv               The same rows as CSV, numbered in FK order
 ```
 
-To stand this up from scratch: run `supabase/schema.sql` then `supabase/seed.sql`
-(the Supabase CLI does both in order on `supabase db reset`). `seed.sql` ends
-with a verification query that returns **0 rows** when everything loaded
-correctly, and one named row per failed assertion otherwise. It truncates before
-inserting, so it is safe to re-run — see the header comment for why `DELETE` and
-`ON CONFLICT` would not be.
+### Restoring the database
+
+Two copies of the same 8,807 rows, both pulled from the live project and both
+validated by round-tripping back to source. Use whichever fits the job.
+
+**`seed.sql` — to actually load it.** Run `schema.sql` then `seed.sql` (the
+Supabase CLI does both in order on `supabase db reset`; otherwise paste them
+into the SQL editor). It runs in a transaction, truncates first so it is safe to
+re-run, and ends with a verification query that returns **0 rows** on success
+and one named row per failed assertion otherwise — row counts, the $22,920 MRR
+total, the 40/10 cohort split, and the invariants the app depends on (no
+post-churn activity, `renewal_date = outcome_date` for churned accounts).
+
+**`seed/*.csv` — to look at it or load it elsewhere.** Smaller (229 KB vs
+359 KB), diffable per row, and opens in a spreadsheet or a notebook. Files are
+numbered `01_`–`06_` in foreign-key order, so load them in that order.
+
+One caveat if you import the CSVs through Supabase's table-editor UI rather than
+`COPY`: `customer_outcomes.reason` is NULL on all 40 retained accounts and is
+written as a bare empty field, which `COPY ... FORMAT csv` reads as NULL. Some
+CSV importers insert an empty string instead. The data contains no legitimate
+empty strings, so `SELECT count(*) FROM customer_outcomes WHERE reason = ''`
+should return 0 after loading — if it returns 40, the importer converted them
+and `seed.sql` is the safer route.
 
 ## Things that will bite you if you forget them
 
