@@ -8448,7 +8448,7 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0011', 'C016', '2026-03-28', 'Dashboard taking 20-30 seconds to load', 'Load times have gotten noticeably worse over the past couple of weeks, especially first thing in the morning.', 'performance', 'negative', 'escalated'),
   ('T0012', 'C016', '2026-03-07', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'negative', 'escalated'),
   ('T0013', 'C016', '2026-02-23', 'Notification rules not triggering', 'We''ve set up alerts for a couple of conditions but they never seem to fire even when the conditions are met.', 'feature', 'negative', 'escalated'),
-  ('T0014', 'C017', '2026-08-24', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'in_progress'),
+  ('T0014', 'C017', '2026-08-24', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'resolved'),
   ('T0015', 'C018', '2026-09-20', 'Scheduled export stopped arriving', 'Our weekly scheduled export just stopped showing up in the destination folder a few weeks ago.', 'export', 'positive', 'resolved'),
   ('T0016', 'C020', '2026-05-18', 'Bulk update tool skipping records', 'Running a bulk update against a list of records only updates a fraction of them with no error shown.', 'feature', 'negative', 'escalated'),
   ('T0017', 'C020', '2026-06-11', 'Unable to invite a new team member', 'The invite link we sent to a new hire is coming back as expired immediately.', 'access', 'negative', 'escalated'),
@@ -8458,7 +8458,7 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0021', 'C021', '2026-06-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'unresolved'),
   ('T0022', 'C026', '2026-08-24', 'Workflow steps executing out of order', 'Steps in our multi-stage workflow are firing out of sequence, causing downstream errors.', 'workflow', 'neutral', 'resolved'),
   ('T0023', 'C027', '2026-10-02', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
-  ('T0024', 'C028', '2026-08-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'unresolved'),
+  ('T0024', 'C028', '2026-08-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'resolved'),
   ('T0025', 'C029', '2026-07-13', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
   ('T0026', 'C030', '2026-07-05', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
   ('T0027', 'C032', '2026-08-25', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
@@ -8932,6 +8932,15 @@ WITH checks(assertion, actual, expected) AS (
           GROUP BY c.customer_id, c.renewal_date
          HAVING c.renewal_date <= MAX(s.date)
        ) stale)::text, '0'),
+    -- A still-paying customer with an account lockout left open for months is
+    -- not how a real support desk behaves; that pattern was corrected in the
+    -- data. Churned accounts keep theirs, where it is part of the churn story.
+    ('no open access ticket on a retained account',
+      (SELECT count(*) FROM public.support_tickets st
+         JOIN public.customer_outcomes co ON co.customer_id = st.customer_id
+        WHERE st.category = 'access'
+          AND st.resolution_status IN ('in_progress', 'unresolved', 'escalated')
+          AND co.outcome = 'retained')::text, '0'),
     ('every customer has usage',
       (SELECT count(*) FROM public.customers c
         WHERE NOT EXISTS (SELECT 1 FROM public.usage_daily u

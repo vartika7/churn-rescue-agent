@@ -176,7 +176,7 @@ the four places where the data shaped the code.
 | `customer_outcomes.outcome`                | `retained` 40, `churned` 10                                     |
 | `evaluation_cases.expected_recommendation` | `no_action_needed` 35, `intervene` 9, `monitor` 6               |
 | `evaluation_cases.expected_risk_level`     | `low` 35, `high` 9, `medium` 6                                  |
-| `support_tickets.resolution_status`        | `resolved` 17, `unresolved` 13, `escalated` 10, `in_progress` 1 |
+| `support_tickets.resolution_status`        | `resolved` 19, `unresolved` 12, `escalated` 10                  |
 | `support_tickets.sentiment`                | `negative` 24, `neutral` 11, `positive` 6                       |
 | `subscriptions.payment_status`             | `paid` 292, `past_due` 1                                        |
 | `subscriptions.change_type`                | `renewal` 242, `new` 50, `payment_failed` 1                     |
@@ -189,6 +189,12 @@ the four places where the data shaped the code.
 - `change_type` also carries the value `payment_failed`, so the billing evidence
   rule checks **both** `payment_status` and `change_type`. The one bad charge in
   the dataset (C014, 2026-05-09) happens to flag in both columns.
+- No retained account has an open `access`-category ticket. A still-paying
+  customer with an account lockout left open for months is not how a real
+  support desk behaves, so those two were resolved in the data; churned
+  accounts keep theirs, where the unresolved lockout is part of the churn
+  story. `seed.sql` asserts it. `resolution_status` no longer contains
+  `in_progress` at all — `OPEN_TICKET_STATUSES` still matches it defensively.
 - With one `past_due` charge in 293, the billing-supporting branch almost never
   fires, and 22 of 50 customers have no tickets at all. Both are exercised by
   fixtures rather than by this data.
