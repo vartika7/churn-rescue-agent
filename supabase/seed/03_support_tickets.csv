@@ -40,3 +40,5 @@ T0038,C046,2026-10-02,Approval step skipped entirely,One of our required approva
 T0039,C048,2026-05-04,Reports timing out on large datasets,Any report over a few thousand rows just spins and eventually times out.,performance,negative,escalated
 T0040,C048,2026-04-22,Approval step skipped entirely,One of our required approval steps is being skipped for certain record types.,workflow,negative,unresolved
 T0041,C048,2026-04-15,Saved filters disappearing,Filters we save on the dashboard are gone the next time we log in.,feature,negative,escalated
+T0042,C028,2026-07-14,Bulk imports timing out since June,Imports that used to finish in a couple of minutes now time out around the halfway mark. We have gone back to entering records by hand.,performance,negative,unresolved
+T0043,C028,2026-10-08,Export always includes the full list,"There is no way to export just the filtered view, so we strip out the rows we do not need by hand every time we send a report on.",export,negative,unresolved

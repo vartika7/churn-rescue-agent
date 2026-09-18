@@ -5,7 +5,7 @@
 -- `supabase db reset`, or paste this into the SQL editor.
 --
 -- 50 customers (40 retained, 10 churned), 8323 usage_daily rows,
--- 41 support tickets, 293 billing charges, portfolio total
+-- 43 support tickets, 293 billing charges, portfolio total
 -- $22,920 MRR.
 --
 -- risk_assessments, investigations and outreach are deliberately left empty:
@@ -8433,7 +8433,7 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C050', '2026-10-30', 8, 10, 16, 6),
   ('C050', '2026-10-31', 12, 12, 22, 5);
 
--- support_tickets (41 rows)
+-- support_tickets (43 rows)
 INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, description, category, sentiment, resolution_status) VALUES
   ('T0001', 'C001', '2026-08-19', 'Heads up: internal restructuring', 'Wanted to flag that we''re going through a reorg this quarter, so usage from our side may look different for a while.', 'account_context', 'positive', 'resolved'),
   ('T0002', 'C004', '2026-08-24', 'Custom field values not saving', 'Values we enter into custom fields revert back after a page refresh.', 'feature', 'neutral', 'resolved'),
@@ -8475,7 +8475,9 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0038', 'C046', '2026-10-02', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'positive', 'resolved'),
   ('T0039', 'C048', '2026-05-04', 'Reports timing out on large datasets', 'Any report over a few thousand rows just spins and eventually times out.', 'performance', 'negative', 'escalated'),
   ('T0040', 'C048', '2026-04-22', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'negative', 'unresolved'),
-  ('T0041', 'C048', '2026-04-15', 'Saved filters disappearing', 'Filters we save on the dashboard are gone the next time we log in.', 'feature', 'negative', 'escalated');
+  ('T0041', 'C048', '2026-04-15', 'Saved filters disappearing', 'Filters we save on the dashboard are gone the next time we log in.', 'feature', 'negative', 'escalated'),
+  ('T0042', 'C028', '2026-07-14', 'Bulk imports timing out since June', 'Imports that used to finish in a couple of minutes now time out around the halfway mark. We have gone back to entering records by hand.', 'performance', 'negative', 'unresolved'),
+  ('T0043', 'C028', '2026-10-08', 'Export always includes the full list', 'There is no way to export just the filtered view, so we strip out the rows we do not need by hand every time we send a report on.', 'export', 'negative', 'unresolved');
 
 -- subscriptions (293 rows)
 INSERT INTO public.subscriptions (customer_id, date, plan, mrr, payment_status, change_type) VALUES
@@ -8889,7 +8891,7 @@ WITH checks(assertion, actual, expected) AS (
   VALUES
     ('customers row count',       (SELECT count(*) FROM public.customers)::text,         '50'),
     ('usage_daily row count',     (SELECT count(*) FROM public.usage_daily)::text,       '8323'),
-    ('support_tickets row count', (SELECT count(*) FROM public.support_tickets)::text,   '41'),
+    ('support_tickets row count', (SELECT count(*) FROM public.support_tickets)::text,   '43'),
     ('subscriptions row count',   (SELECT count(*) FROM public.subscriptions)::text,     '293'),
     ('customer_outcomes count',   (SELECT count(*) FROM public.customer_outcomes)::text, '50'),
     ('evaluation_cases count',    (SELECT count(*) FROM public.evaluation_cases)::text,  '50'),

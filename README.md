@@ -176,8 +176,8 @@ the four places where the data shaped the code.
 | `customer_outcomes.outcome`                | `retained` 40, `churned` 10                                     |
 | `evaluation_cases.expected_recommendation` | `no_action_needed` 35, `intervene` 9, `monitor` 6               |
 | `evaluation_cases.expected_risk_level`     | `low` 35, `high` 9, `medium` 6                                  |
-| `support_tickets.resolution_status`        | `resolved` 19, `unresolved` 12, `escalated` 10                  |
-| `support_tickets.sentiment`                | `negative` 24, `neutral` 11, `positive` 6                       |
+| `support_tickets.resolution_status`        | `resolved` 19, `unresolved` 14, `escalated` 10                  |
+| `support_tickets.sentiment`                | `negative` 26, `neutral` 11, `positive` 6                       |
 | `subscriptions.payment_status`             | `paid` 292, `past_due` 1                                        |
 | `subscriptions.change_type`                | `renewal` 242, `new` 50, `payment_failed` 1                     |
 
@@ -189,6 +189,13 @@ the four places where the data shaped the code.
 - `change_type` also carries the value `payment_failed`, so the billing evidence
   rule checks **both** `payment_status` and `change_type`. The one bad charge in
   the dataset (C014, 2026-05-09) happens to flag in both columns.
+- C028 (Juniper Group) carries two authored tickets, T0042 and T0043 — a
+  performance complaint dated inside its Jun-Aug engagement dip and a recent
+  export gap. They were written to give its `monitor` grading something to
+  stand on: before them the rule-based panel found nothing supporting, so the
+  badge and the evidence contradicted each other. Both are `unresolved`, which
+  is plausible for backlog items on an $85/mo account in a way an open account
+  lockout is not.
 - No retained account has an open `access`-category ticket. A still-paying
   customer with an account lockout left open for months is not how a real
   support desk behaves, so those two were resolved in the data; churned
