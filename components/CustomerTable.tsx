@@ -84,10 +84,9 @@ const ACTIVE_COLUMNS: Column[] = [
   { key: "renewal", label: "Renewal" },
 ];
 
-/* No renewal column for lost accounts. Since migration 17 a churned account's
-   renewal_date equals its outcome_date, so the column would just restate the
-   churn date under a heading that implies a live contract. Churn date and
-   reason instead. */
+/* No renewal column for lost accounts: a churned account's renewal_date equals
+   its outcome_date, so the column would just restate the churn date under a
+   heading that implies a live contract. Churn date and reason instead. */
 const LOST_COLUMNS: Column[] = [
   { key: "company", label: "Company" },
   { key: "industry", label: "Industry" },

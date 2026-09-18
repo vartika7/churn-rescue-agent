@@ -61,9 +61,9 @@ export default async function CustomerPage({
   const evidence = buildEvidence(usage, tickets, subscriptions);
 
   // A churned account gets past-tense framing throughout: no present-tense
-  // "Intervene" badge, and no renewal countdown — since migration 17 its
-  // renewal_date equals its outcome_date, so a countdown would just restate
-  // the churn date as though a contract were still running.
+  // "Intervene" badge, and no renewal countdown — its renewal_date equals its
+  // outcome_date, so a countdown would just restate the churn date as though a
+  // contract were still running.
   const isChurned = (outcome?.outcome ?? "").toLowerCase() !== "retained";
   const retrospective = isChurned
     ? retrospectiveBadge(recommendation, riskCase?.case_type)

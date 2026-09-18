@@ -250,8 +250,9 @@ function pickAxisTicks(rows: UsageDaily[]): string[] {
 }
 
 /**
- * `feature_usage` is typed as a number but has not been verified against the
- * live column, so anything non-numeric is rendered as-is rather than as NaN.
+ * All four metrics are integer columns, so the numeric branch is what runs.
+ * The fallbacks exist so a schema change renders something readable instead of
+ * "NaN" in the tooltip.
  */
 function formatMetric(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) {

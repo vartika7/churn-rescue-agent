@@ -159,28 +159,17 @@ it left. Nothing that simulates the real risk/AI workflow may read either table.
 for the Phase 5 investigation agent, computed from real usage/support/billing
 signals. Thresholds live in `EVIDENCE_THRESHOLDS` and are provisional.
 
-## Live data, as verified on 2026-09-18 (v2 dataset)
+## The dataset
 
-Row counts: `customers` 50, `usage_daily` 8,323, `support_tickets` 41,
-`subscriptions` 293, `customer_outcomes` 50, `evaluation_cases` 50.
-`risk_assessments`, `investigations` and `outreach` are empty, as intended.
-Portfolio reconciles to the expected **$22,920 MRR** — $16,675 across the 40
-retained accounts, $6,245 already lost across the 10 churned ones.
-`feature_usage` is an integer column.
+The exact rows live in `supabase/seed/` and `supabase/seed.sql`, so counts and
+invariants no longer need restating here — `seed.sql` ends with a verification
+query that asserts them (row counts, the $22,920 MRR total, the 40 retained /
+10 churned split, no post-churn activity, `renewal_date = outcome_date` for
+churned accounts). Run it and read the result rather than trusting prose.
 
-Renewal dates split by cohort since migration 17: the **40 retained** accounts
-renew 3-150 days after 2026-09-18, none in the past, while the **10 churned**
-accounts now carry `renewal_date = outcome_date` (so mostly in the past, and not
-shown in the UI). Countdowns read the real clock, so which active accounts fall
-in the amber (<=14-day) bucket changes as time passes — measured from the live
-data, 8 of the 40 are amber today, 5 thirty days on, 3 at sixty days, with
-overdue rising 0 -> 12 -> 22.
-
-Post-churn leakage was re-checked and is clean: **zero** `usage_daily` rows and
-**zero** `subscriptions` rows exist for any churned customer dated after that
-customer's `outcome_date`.
-
-Column vocabularies, which the heuristics in `lib/analysis.ts` match against:
+What is worth writing down is the part the data does not explain on its own:
+the column vocabularies the heuristics in `lib/analysis.ts` match against, and
+the four places where the data shaped the code.
 
 | Column                                     | Values                                                          |
 | ------------------------------------------ | --------------------------------------------------------------- |
@@ -192,8 +181,6 @@ Column vocabularies, which the heuristics in `lib/analysis.ts` match against:
 | `subscriptions.payment_status`             | `paid` 292, `past_due` 1                                        |
 | `subscriptions.change_type`                | `renewal` 242, `new` 50, `payment_failed` 1                     |
 
-Four consequences worth knowing:
-
 - The stored recommendation is `no_action_needed`, not the `no_action` the brief
   documented. `parseRecommendation` accepts both; drop the alias and 35
   accounts silently become "No case data".
@@ -203,7 +190,7 @@ Four consequences worth knowing:
   rule checks **both** `payment_status` and `change_type`. The one bad charge in
   the dataset (C014, 2026-05-09) happens to flag in both columns.
 - With one `past_due` charge in 293, the billing-supporting branch almost never
-  fires; 22 of 50 customers have no tickets at all. Both are exercised by
+  fires, and 22 of 50 customers have no tickets at all. Both are exercised by
   fixtures rather than by this data.
 
 ### Consequence: no active account is flagged "Intervene"
@@ -219,18 +206,15 @@ broken. It also means the placeholder data carries **no forward-looking signal
 for active accounts** — which is exactly the gap the Phase 4 risk engine exists
 to fill, and worth remembering before reading anything into that zero.
 
-### Resolved: churned accounts' renewal dates
+### Churned accounts' renewal dates
 
-Churned accounts used to carry a `renewal_date` _after_ their `outcome_date`
-(C048 left 2026-05-14 but renewed 2027-02-06). Migration
-`17_fix_churned_renewal_dates.sql` set `renewal_date = outcome_date` for all 10;
-re-verified here on 2026-09-18 with 0 mismatches, `signup_date < renewal_date`
-still holding for all 50, and the 40 retained accounts untouched (3-150 days
-out, none in the past).
+Every churned account carries `renewal_date = outcome_date`, which `seed.sql`
+asserts. Retained accounts renew ahead of the snapshot date; churned ones do
+not, so their dates sit in the past.
 
-The Lost accounts view still omits the renewal column and the detail page still
-swaps it for the churn date. The reason is now different: the column would
-simply restate the churn date under a heading implying a live contract.
+That is why the Lost accounts view omits the renewal column and the detail page
+swaps it for the churn date — the column would otherwise restate the churn date
+under a heading implying a live contract.
 
 C041's `outcome_date` of 2026-09-26 is intentionally left as-is. With countdowns
 on the real clock it needs no separate fix.
