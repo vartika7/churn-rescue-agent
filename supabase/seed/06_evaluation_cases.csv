@@ -1,0 +1,51 @@
+customer_id,actual_outcome,expected_risk_level,expected_recommendation,expected_root_cause,case_type
+C001,retained,medium,monitor,Usage dip coincides with a customer-reported internal change; likely benign but worth monitoring,conflicting_signal_monitor
+C002,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C003,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C004,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C005,churned,high,intervene,Gradual engagement decline; weaker corroborating evidence than typical at-risk accounts,difficult_intervene
+C006,retained,medium,monitor,Moderate engagement dip; insufficient evidence for immediate intervention,standard_monitor
+C007,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C008,churned,low,no_action_needed,No identifiable risk signal in available data prior to churn,unobservable_limitation
+C009,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C010,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C011,retained,medium,monitor,Usage dip coincides with a customer-reported internal change; likely benign but worth monitoring,conflicting_signal_monitor
+C012,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C013,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C014,churned,high,intervene,Payment/renewal risk despite healthy and stable product engagement,high_usage_intervene
+C015,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C016,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C017,retained,medium,monitor,Moderate engagement dip; insufficient evidence for immediate intervention,standard_monitor
+C018,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C019,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C020,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C021,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C022,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C023,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C024,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C025,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C026,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C027,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C028,retained,medium,monitor,Moderate engagement dip; insufficient evidence for immediate intervention,standard_monitor
+C029,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C030,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C031,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C032,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C033,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C034,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C035,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C036,churned,high,intervene,Gradual engagement decline; weaker corroborating evidence than typical at-risk accounts,difficult_intervene
+C037,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C038,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C039,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C040,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C041,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C042,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C043,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
+C044,retained,medium,monitor,Moderate engagement dip; insufficient evidence for immediate intervention,standard_monitor
+C045,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C046,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C047,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C048,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
+C049,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C050,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
