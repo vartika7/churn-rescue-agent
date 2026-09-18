@@ -5,9 +5,8 @@
 -- and every column name, type, nullability, primary key, foreign key and
 -- default below matches what is deployed.
 --
--- This is a declarative snapshot, not a numbered step in the migration chain
--- (e.g. 17_fix_churned_renewal_dates.sql, which set renewal_date = outcome_date
--- for churned accounts). Data changes belong in those; this file is the shape.
+-- This is a declarative snapshot of the table shapes. Data changes are applied
+-- separately and are not tracked here.
 --
 -- Notes for anyone reading this alongside the app:
 --

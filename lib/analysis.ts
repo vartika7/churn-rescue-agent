@@ -98,8 +98,13 @@ export interface EvidenceSplit {
 
 /**
  * Normalises a status/sentiment string so that "Past Due", "past-due" and
- * "past_due" all compare equal. The exact casing used in the seeded data has
- * not been verified against the live table, so matching is deliberately loose.
+ * "past_due" all compare equal.
+ *
+ * The dataset's actual values are all lowercase with underscores (see
+ * supabase/seed/), so this normalisation is not strictly needed today. It is
+ * kept because the alternative — matching raw strings — fails silently on a
+ * casing change rather than erroring, and these comparisons decide whether
+ * evidence appears at all.
  */
 function normalise(value: string | null | undefined): string {
   return (value ?? "")

@@ -18,11 +18,11 @@ export const RECOMMENDATIONS: Recommendation[] = [
 /**
  * Maps the stored strings onto the three buckets.
  *
- * Verified against the v2 dataset on 2026-09-18: `expected_recommendation`
- * holds "no_action_needed" (35), "intervene" (9) and "monitor" (6). The brief
- * documented that first value as "no_action", so both spellings are accepted —
- * without the alias 35 accounts render as "No case data" and the "No action"
- * summary count reads zero.
+ * In the dataset (see supabase/seed/06_evaluation_cases.csv)
+ * `expected_recommendation` holds "no_action_needed" (35), "intervene" (9) and
+ * "monitor" (6). The brief documented that first value as "no_action", so both
+ * spellings are accepted — without the alias 35 accounts render as "No case
+ * data" and the "No action" summary count reads zero.
  */
 const RECOMMENDATION_ALIASES: Record<string, Recommendation> = {
   intervene: "intervene",
@@ -104,8 +104,9 @@ export interface RetrospectiveBadge {
  * tenth (C008, `unobservable_limitation`) was acquired by a competitor with no
  * product signal to catch, so "should have intervened" would be untrue of it.
  *
- * Verified against the live table on 2026-09-18: churned x intervene = 9,
- * churned x no_action_needed = 1 (the unobservable case).
+ * In the dataset, churned x intervene = 9 and churned x no_action_needed = 1
+ * (the unobservable case) — cross-check against supabase/seed/ if that ever
+ * looks wrong.
  */
 export function retrospectiveBadge(
   rec: Recommendation | null,

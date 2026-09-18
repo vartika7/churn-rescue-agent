@@ -1,9 +1,8 @@
 -- Churn Rescue Agent — seed data
 --
 -- Snapshot of the v2 dataset, pulled from the live Supabase project on
--- 2026-09-18 (after 17_fix_churned_renewal_dates.sql). Load after schema.sql;
--- the Supabase CLI runs both in order on `supabase db reset`, or paste this
--- into the SQL editor.
+-- 2026-09-18. Load after schema.sql; the Supabase CLI runs both in order on
+-- `supabase db reset`, or paste this into the SQL editor.
 --
 -- 50 customers (40 retained, 10 churned), 8323 usage_daily rows,
 -- 41 support tickets, 293 billing charges, portfolio total
