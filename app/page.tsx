@@ -7,8 +7,12 @@ import {
 } from "@/components/CustomerTable";
 import { PrototypeNote } from "@/components/PrototypeNote";
 import { SetupError } from "@/components/SetupError";
-import { sessionsTrend } from "@/lib/analysis";
-import { SPARKLINE_DAYS } from "@/lib/constants";
+import { activeDaysComparison, recentVsPriorTrend } from "@/lib/analysis";
+import {
+  ACTIVITY_WINDOW_DAYS,
+  SPARKLINE_DAYS,
+  TREND_WINDOW_DAYS,
+} from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   getLatestRecordedDate,
@@ -95,8 +99,14 @@ export default async function DashboardPage({
     const history = usageByCustomer.get(customer.customer_id) ?? [];
     const windowRows = history.slice(-SPARKLINE_DAYS);
     const sparkline = windowRows.map((r) => r.sessions);
-    const trend = sessionsTrend(sparkline);
     const recordedThrough = getLatestRecordedDate(history);
+
+    // Two different questions, deliberately kept apart. The trend answers "is
+    // this falling off?" over adjacent 30-day windows; active days answers "is
+    // anyone actually showing up?", which an average hides — 30 sessions spread
+    // over 30 days and crammed into 3 average the same.
+    const trend = recentVsPriorTrend(sparkline, TREND_WINDOW_DAYS);
+    const activity = activeDaysComparison(windowRows, ACTIVITY_WINDOW_DAYS);
 
     // Renewal countdown: real wall-clock time, a different question entirely.
     const countdown = renewalCountdown(customer.renewal_date, realToday);
@@ -113,6 +123,11 @@ export default async function DashboardPage({
         ? formatDate(recordedThrough)
         : null,
       trendPct: trend.pctChange,
+      trendWindowDays: trend.recentDays,
+      activeDays: activity.active,
+      activityWindowDays: activity.days,
+      activeDaysPrior: activity.priorActive,
+      activeDaysDelta: activity.delta,
       recommendation,
       renewalDateLabel: formatDate(customer.renewal_date),
       renewalDays: countdown.days,
@@ -174,13 +189,13 @@ export default async function DashboardPage({
       <div className="page-head">
         <div>
           <h1 className="page-title">Portfolio risk overview</h1>
+          {/* One line on purpose. The date-anchor explanation this used to
+              carry now lives in the per-column tooltips, where it is read at
+              the moment it matters rather than skimmed past up here. */}
           <p className="page-desc">
-            {activeRows.length} active accounts, {lostRows.length} lost. Usage,
-            support and billing data read live from Supabase. Renewal countdowns
-            are measured against today,{" "}
-            <span className="mono">{formatDate(toISODate(realToday))}</span>;
-            usage windows are measured against each account&apos;s own latest
-            recorded day, which is why the two can differ.
+            {activeRows.length} active accounts, {lostRows.length} lost · live
+            from Supabase · today is{" "}
+            <span className="mono">{formatDate(toISODate(realToday))}</span>
           </p>
         </div>
       </div>

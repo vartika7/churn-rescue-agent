@@ -60,12 +60,23 @@ interface Filters {
 }
 
 /**
- * Pages through a table until it runs out of rows.
+ * Reads every matching row, in pages, fetching the pages concurrently.
  *
  * `usage_daily` holds 8,323 rows (50 customers x 112-196 days), so a plain
  * `.select()` would silently return only the first 1000 and quietly drop most
  * customers off the dashboard. `order` must produce a total order, otherwise
  * rows can repeat or vanish across page boundaries.
+ *
+ * The first request asks for an exact count, which tells us how many further
+ * pages exist so they can all go out at once. Paging sequentially instead cost
+ * 9 round trips of ~300-650ms each — about 3.4s of the dashboard's load, versus
+ * ~1.1s concurrently.
+ *
+ * One consequence of fetching by offset in parallel: if rows were inserted
+ * between the count and the page reads, page boundaries would shift and a row
+ * could be missed or repeated. Sequential paging has the same hazard, and these
+ * are read-only views over a static dataset, so it is not worth a snapshot
+ * transaction here — but it would be if this ever read a table under writes.
  */
 export async function selectAll<T>(
   table: string,
@@ -74,10 +85,12 @@ export async function selectAll<T>(
   filters: Filters = {},
 ): Promise<T[]> {
   const supabase = getSupabase();
-  const rows: T[] = [];
 
-  for (let from = 0; ; from += PAGE_SIZE) {
-    let query = supabase.from(table).select(columns);
+  // Rebuilt per request: a PostgREST builder cannot be reused once awaited.
+  const build = (withCount: boolean) => {
+    let query = withCount
+      ? supabase.from(table).select(columns, { count: "exact" })
+      : supabase.from(table).select(columns);
 
     for (const [column, value] of Object.entries(filters.eq ?? {})) {
       query = query.eq(column, value);
@@ -91,14 +104,33 @@ export async function selectAll<T>(
     for (const { column, ascending = true } of order) {
       query = query.order(column, { ascending });
     }
+    return query;
+  };
 
-    const { data, error } = await query.range(from, from + PAGE_SIZE - 1);
-    if (error) {
-      throw new Error(`Supabase read failed on "${table}": ${error.message}`);
-    }
+  const fail = (message: string) => {
+    throw new Error(`Supabase read failed on "${table}": ${message}`);
+  };
 
-    rows.push(...((data ?? []) as T[]));
-    if (!data || data.length < PAGE_SIZE) break;
+  const first = await build(true).range(0, PAGE_SIZE - 1);
+  if (first.error) fail(first.error.message);
+
+  const rows = [...((first.data ?? []) as T[])];
+  const total = first.count ?? rows.length;
+
+  // Short-circuit the common case: one page is all there was.
+  if (rows.length < PAGE_SIZE || rows.length >= total) return rows;
+
+  const offsets: number[] = [];
+  for (let from = PAGE_SIZE; from < total; from += PAGE_SIZE)
+    offsets.push(from);
+
+  const pages = await Promise.all(
+    offsets.map((from) => build(false).range(from, from + PAGE_SIZE - 1)),
+  );
+
+  for (const page of pages) {
+    if (page.error) fail(page.error.message);
+    rows.push(...((page.data ?? []) as T[]));
   }
 
   return rows;

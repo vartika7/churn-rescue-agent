@@ -18,6 +18,22 @@
 export const SPARKLINE_DAYS = 90;
 
 /**
+ * The dashboard's trend column compares the last N days on record against the
+ * N immediately before. Both windows fit inside SPARKLINE_DAYS, so the figure
+ * can be checked by eye against the sparkline beside it.
+ */
+export const TREND_WINDOW_DAYS = 30;
+
+/**
+ * Window for the "Active 30d" column — days with at least one session.
+ *
+ * Kept equal to EVIDENCE_THRESHOLDS.zeroActivityWindowDays on purpose: the
+ * column and the evidence panel's zero-activity rule then describe the same
+ * window, so a reader comparing the two never sees them disagree.
+ */
+export const ACTIVITY_WINDOW_DAYS = 30;
+
+/**
  * Thresholds for the evidence heuristics in lib/analysis.ts.
  *
  * These are a UI-layer stand-in for the real Phase 5 AI investigation agent.

@@ -5,7 +5,7 @@
 -- `supabase db reset`, or paste this into the SQL editor.
 --
 -- 50 customers (40 retained, 10 churned), 8323 usage_daily rows,
--- 41 support tickets, 293 billing charges, portfolio total
+-- 43 support tickets, 293 billing charges, portfolio total
 -- $22,920 MRR.
 --
 -- risk_assessments, investigations and outreach are deliberately left empty:
@@ -40,56 +40,56 @@ TRUNCATE TABLE
 
 -- customers (50 rows)
 INSERT INTO public.customers (customer_id, company, plan, mrr, signup_date, renewal_date, industry, company_size) VALUES
-  ('C001', 'Ironclad Solutions', 'Pro', 305, '2024-12-05', '2026-09-21', 'Manufacturing', '501-1000'),
-  ('C002', 'Harbor Solutions', 'Growth', 225, '2024-11-29', '2026-09-22', 'Telecommunications', '251-500'),
-  ('C003', 'Silverline Analytics', 'Growth', 110, '2025-05-27', '2026-09-23', 'FinTech', '101-250'),
-  ('C004', 'Copper Collective', 'Growth', 90, '2024-01-16', '2026-09-25', 'Logistics', '501-1000'),
+  ('C001', 'Ironclad Solutions', 'Pro', 305, '2024-12-05', '2026-11-05', 'Manufacturing', '501-1000'),
+  ('C002', 'Harbor Solutions', 'Growth', 225, '2024-11-29', '2026-11-30', 'Telecommunications', '251-500'),
+  ('C003', 'Silverline Analytics', 'Growth', 110, '2025-05-27', '2026-11-03', 'FinTech', '101-250'),
+  ('C004', 'Copper Collective', 'Growth', 90, '2024-01-16', '2026-11-12', 'Logistics', '501-1000'),
   ('C005', 'Pacific Industries', 'Pro', 580, '2025-09-22', '2026-08-10', 'Nonprofit', '1-50'),
-  ('C006', 'River Solutions', 'Growth', 110, '2024-06-17', '2026-09-27', 'Insurance', '251-500'),
-  ('C007', 'Northgate Technologies', 'Growth', 150, '2024-01-12', '2026-09-28', 'Hospitality', '251-500'),
+  ('C006', 'River Solutions', 'Growth', 110, '2024-06-17', '2026-11-06', 'Insurance', '251-500'),
+  ('C007', 'Northgate Technologies', 'Growth', 150, '2024-01-12', '2026-11-19', 'Hospitality', '251-500'),
   ('C008', 'Blue Works', 'Pro', 545, '2024-04-03', '2026-06-11', 'Legal Services', '51-100'),
-  ('C009', 'Westbrook Ventures', 'Enterprise', 1665, '2025-01-28', '2026-10-01', 'Real Estate', '1001+'),
-  ('C010', 'Ridgeline Collective', 'Pro', 355, '2025-07-01', '2026-10-02', 'Education', '251-500'),
-  ('C011', 'Granite Solutions', 'Growth', 155, '2026-04-08', '2026-10-03', 'Professional Services', '501-1000'),
-  ('C012', 'Clearwater Holdings', 'Growth', 245, '2025-06-18', '2026-10-05', 'Manufacturing', '51-100'),
+  ('C009', 'Westbrook Ventures', 'Enterprise', 1665, '2025-01-28', '2026-11-03', 'Real Estate', '1001+'),
+  ('C010', 'Ridgeline Collective', 'Pro', 355, '2025-07-01', '2026-11-03', 'Education', '251-500'),
+  ('C011', 'Granite Solutions', 'Growth', 155, '2026-04-08', '2026-11-01', 'Professional Services', '501-1000'),
+  ('C012', 'Clearwater Holdings', 'Growth', 245, '2025-06-18', '2026-11-22', 'Manufacturing', '51-100'),
   ('C013', 'Granite Technologies', 'Pro', 435, '2024-11-24', '2026-07-30', 'Telecommunications', '1001+'),
   ('C014', 'Westbrook Collective', 'Pro', 655, '2024-12-29', '2026-06-22', 'Insurance', '1-50'),
-  ('C015', 'Marlowe Group', 'Growth', 125, '2024-12-10', '2026-10-12', 'Media & Entertainment', '1-50'),
+  ('C015', 'Marlowe Group', 'Growth', 125, '2024-12-10', '2026-11-04', 'Media & Entertainment', '1-50'),
   ('C016', 'Lumen Studio', 'Pro', 560, '2025-01-23', '2026-05-17', 'Media & Entertainment', '1-50'),
-  ('C017', 'Copper Analytics', 'Growth', 95, '2023-09-26', '2026-10-16', 'Nonprofit', '51-100'),
-  ('C018', 'Longview Collective', 'Enterprise', 1545, '2024-09-29', '2026-10-18', 'Logistics', '501-1000'),
-  ('C019', 'Orbit Networks', 'Growth', 165, '2024-10-24', '2026-10-20', 'Media & Entertainment', '1001+'),
+  ('C017', 'Copper Analytics', 'Growth', 95, '2023-09-26', '2026-11-26', 'Nonprofit', '51-100'),
+  ('C018', 'Longview Collective', 'Enterprise', 1545, '2024-09-29', '2026-11-01', 'Logistics', '501-1000'),
+  ('C019', 'Orbit Networks', 'Growth', 165, '2024-10-24', '2026-11-22', 'Media & Entertainment', '1001+'),
   ('C020', 'Harbor Ventures', 'Enterprise', 1420, '2024-01-17', '2026-07-18', 'Professional Services', '51-100'),
   ('C021', 'Cedar Holdings', 'Growth', 160, '2025-01-10', '2026-07-21', 'Nonprofit', '1001+'),
-  ('C022', 'Harbor Studio', 'Growth', 255, '2024-01-13', '2026-10-27', 'Legal Services', '1001+'),
-  ('C023', 'Summit Solutions', 'Pro', 460, '2024-12-13', '2026-10-29', 'Energy', '501-1000'),
-  ('C024', 'Pacific Partners', 'Growth', 150, '2024-07-28', '2026-10-31', 'Professional Services', '501-1000'),
-  ('C025', 'Marlowe Partners', 'Pro', 505, '2025-01-27', '2026-11-02', 'Insurance', '101-250'),
-  ('C026', 'Atlas Networks', 'Pro', 645, '2025-12-23', '2026-11-03', 'Legal Services', '101-250'),
-  ('C027', 'Highland Group', 'Growth', 75, '2024-12-14', '2026-11-07', 'Energy', '51-100'),
+  ('C022', 'Harbor Studio', 'Growth', 255, '2024-01-13', '2026-11-12', 'Legal Services', '1001+'),
+  ('C023', 'Summit Solutions', 'Pro', 460, '2024-12-13', '2026-11-21', 'Energy', '501-1000'),
+  ('C024', 'Pacific Partners', 'Growth', 150, '2024-07-28', '2026-11-10', 'Professional Services', '501-1000'),
+  ('C025', 'Marlowe Partners', 'Pro', 505, '2025-01-27', '2026-11-28', 'Insurance', '101-250'),
+  ('C026', 'Atlas Networks', 'Pro', 645, '2025-12-23', '2026-11-20', 'Legal Services', '101-250'),
+  ('C027', 'Highland Group', 'Growth', 75, '2024-12-14', '2026-11-01', 'Energy', '51-100'),
   ('C028', 'Juniper Group', 'Growth', 85, '2024-03-27', '2026-11-12', 'Education', '1-50'),
-  ('C029', 'Longview Holdings', 'Enterprise', 1465, '2025-02-06', '2026-11-16', 'FinTech', '251-500'),
-  ('C030', 'Orbit Works', 'Growth', 125, '2025-02-18', '2026-11-20', 'Hospitality', '1001+'),
-  ('C031', 'Sterling Analytics', 'Growth', 90, '2024-03-13', '2026-11-25', 'Energy', '1-50'),
+  ('C029', 'Longview Holdings', 'Enterprise', 1465, '2025-02-06', '2026-11-01', 'FinTech', '251-500'),
+  ('C030', 'Orbit Works', 'Growth', 125, '2025-02-18', '2026-11-17', 'Hospitality', '1001+'),
+  ('C031', 'Sterling Analytics', 'Growth', 90, '2024-03-13', '2026-11-22', 'Energy', '1-50'),
   ('C032', 'Pioneer Networks', 'Pro', 330, '2026-01-01', '2026-11-29', 'Nonprofit', '251-500'),
-  ('C033', 'Summit Holdings', 'Growth', 160, '2025-09-09', '2026-12-03', 'Logistics', '251-500'),
-  ('C034', 'Anchor Collective', 'Pro', 540, '2023-12-17', '2026-12-08', 'Nonprofit', '51-100'),
-  ('C035', 'Pacific Solutions', 'Enterprise', 1765, '2025-08-31', '2026-12-12', 'Legal Services', '1-50'),
+  ('C033', 'Summit Holdings', 'Growth', 160, '2025-09-09', '2026-11-12', 'Logistics', '251-500'),
+  ('C034', 'Anchor Collective', 'Pro', 540, '2023-12-17', '2026-11-19', 'Nonprofit', '51-100'),
+  ('C035', 'Pacific Solutions', 'Enterprise', 1765, '2025-08-31', '2026-11-29', 'Legal Services', '1-50'),
   ('C036', 'Blue Holdings', 'Growth', 125, '2026-02-24', '2026-09-15', 'Legal Services', '1001+'),
-  ('C037', 'Cascade Labs', 'Growth', 190, '2023-12-19', '2026-12-21', 'Education', '251-500'),
-  ('C038', 'Orbit Partners', 'Pro', 605, '2023-11-16', '2026-12-25', 'FinTech', '251-500'),
-  ('C039', 'Marlowe Works', 'Growth', 215, '2024-12-03', '2026-12-29', 'Legal Services', '501-1000'),
-  ('C040', 'Copper Group', 'Pro', 335, '2025-08-19', '2027-01-03', 'Energy', '501-1000'),
+  ('C037', 'Cascade Labs', 'Growth', 190, '2023-12-19', '2026-11-25', 'Education', '251-500'),
+  ('C038', 'Orbit Partners', 'Pro', 605, '2023-11-16', '2026-11-12', 'FinTech', '251-500'),
+  ('C039', 'Marlowe Works', 'Growth', 215, '2024-12-03', '2026-11-07', 'Legal Services', '501-1000'),
+  ('C040', 'Copper Group', 'Pro', 335, '2025-08-19', '2026-11-28', 'Energy', '501-1000'),
   ('C041', 'Westbrook Works', 'Growth', 230, '2025-04-19', '2026-09-26', 'Nonprofit', '51-100'),
-  ('C042', 'Granite Group', 'Growth', 215, '2024-11-21', '2027-01-11', 'Healthcare', '51-100'),
-  ('C043', 'Pioneer Analytics', 'Growth', 150, '2024-01-09', '2027-01-16', 'Media & Entertainment', '501-1000'),
-  ('C044', 'Harborview Solutions', 'Pro', 615, '2024-12-17', '2027-01-20', 'Healthcare', '251-500'),
-  ('C045', 'Pioneer Partners', 'Pro', 430, '2024-02-13', '2027-01-24', 'Insurance', '251-500'),
-  ('C046', 'Redwood Systems', 'Growth', 205, '2025-11-10', '2027-01-29', 'Real Estate', '1-50'),
-  ('C047', 'Lumen Technologies', 'Growth', 195, '2024-09-15', '2027-02-02', 'Logistics', '101-250'),
+  ('C042', 'Granite Group', 'Growth', 215, '2024-11-21', '2026-11-26', 'Healthcare', '51-100'),
+  ('C043', 'Pioneer Analytics', 'Growth', 150, '2024-01-09', '2026-11-05', 'Media & Entertainment', '501-1000'),
+  ('C044', 'Harborview Solutions', 'Pro', 615, '2024-12-17', '2026-11-16', 'Healthcare', '251-500'),
+  ('C045', 'Pioneer Partners', 'Pro', 430, '2024-02-13', '2026-11-27', 'Insurance', '251-500'),
+  ('C046', 'Redwood Systems', 'Growth', 205, '2025-11-10', '2026-11-03', 'Real Estate', '1-50'),
+  ('C047', 'Lumen Technologies', 'Growth', 195, '2024-09-15', '2026-11-24', 'Logistics', '101-250'),
   ('C048', 'Lakeside Studio', 'Enterprise', 1535, '2024-06-10', '2026-05-14', 'Real Estate', '101-250'),
-  ('C049', 'Harborview Networks', 'Growth', 105, '2026-03-14', '2027-02-11', 'Logistics', '1-50'),
-  ('C050', 'Delta Solutions', 'Enterprise', 1425, '2025-05-22', '2027-02-15', 'Logistics', '1001+');
+  ('C049', 'Harborview Networks', 'Growth', 105, '2026-03-14', '2026-11-29', 'Logistics', '1-50'),
+  ('C050', 'Delta Solutions', 'Enterprise', 1425, '2025-05-22', '2026-11-24', 'Logistics', '1001+');
 
 -- usage_daily (8323 rows)
 INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
@@ -8433,7 +8433,7 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C050', '2026-10-30', 8, 10, 16, 6),
   ('C050', '2026-10-31', 12, 12, 22, 5);
 
--- support_tickets (41 rows)
+-- support_tickets (43 rows)
 INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, description, category, sentiment, resolution_status) VALUES
   ('T0001', 'C001', '2026-08-19', 'Heads up: internal restructuring', 'Wanted to flag that we''re going through a reorg this quarter, so usage from our side may look different for a while.', 'account_context', 'positive', 'resolved'),
   ('T0002', 'C004', '2026-08-24', 'Custom field values not saving', 'Values we enter into custom fields revert back after a page refresh.', 'feature', 'neutral', 'resolved'),
@@ -8448,7 +8448,7 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0011', 'C016', '2026-03-28', 'Dashboard taking 20-30 seconds to load', 'Load times have gotten noticeably worse over the past couple of weeks, especially first thing in the morning.', 'performance', 'negative', 'escalated'),
   ('T0012', 'C016', '2026-03-07', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'negative', 'escalated'),
   ('T0013', 'C016', '2026-02-23', 'Notification rules not triggering', 'We''ve set up alerts for a couple of conditions but they never seem to fire even when the conditions are met.', 'feature', 'negative', 'escalated'),
-  ('T0014', 'C017', '2026-08-24', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'in_progress'),
+  ('T0014', 'C017', '2026-08-24', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'resolved'),
   ('T0015', 'C018', '2026-09-20', 'Scheduled export stopped arriving', 'Our weekly scheduled export just stopped showing up in the destination folder a few weeks ago.', 'export', 'positive', 'resolved'),
   ('T0016', 'C020', '2026-05-18', 'Bulk update tool skipping records', 'Running a bulk update against a list of records only updates a fraction of them with no error shown.', 'feature', 'negative', 'escalated'),
   ('T0017', 'C020', '2026-06-11', 'Unable to invite a new team member', 'The invite link we sent to a new hire is coming back as expired immediately.', 'access', 'negative', 'escalated'),
@@ -8458,7 +8458,7 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0021', 'C021', '2026-06-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'unresolved'),
   ('T0022', 'C026', '2026-08-24', 'Workflow steps executing out of order', 'Steps in our multi-stage workflow are firing out of sequence, causing downstream errors.', 'workflow', 'neutral', 'resolved'),
   ('T0023', 'C027', '2026-10-02', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
-  ('T0024', 'C028', '2026-08-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'unresolved'),
+  ('T0024', 'C028', '2026-08-23', 'Team members locked out after password reset', 'Two of our admins reset their passwords and are now stuck in a loop unable to log back in.', 'access', 'negative', 'resolved'),
   ('T0025', 'C029', '2026-07-13', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
   ('T0026', 'C030', '2026-07-05', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
   ('T0027', 'C032', '2026-08-25', 'CSV export truncated at 10,000 rows', 'Any export over 10k rows gets cut off partway through with no error message shown.', 'export', 'neutral', 'resolved'),
@@ -8475,7 +8475,9 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0038', 'C046', '2026-10-02', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'positive', 'resolved'),
   ('T0039', 'C048', '2026-05-04', 'Reports timing out on large datasets', 'Any report over a few thousand rows just spins and eventually times out.', 'performance', 'negative', 'escalated'),
   ('T0040', 'C048', '2026-04-22', 'Approval step skipped entirely', 'One of our required approval steps is being skipped for certain record types.', 'workflow', 'negative', 'unresolved'),
-  ('T0041', 'C048', '2026-04-15', 'Saved filters disappearing', 'Filters we save on the dashboard are gone the next time we log in.', 'feature', 'negative', 'escalated');
+  ('T0041', 'C048', '2026-04-15', 'Saved filters disappearing', 'Filters we save on the dashboard are gone the next time we log in.', 'feature', 'negative', 'escalated'),
+  ('T0042', 'C028', '2026-07-14', 'Bulk imports timing out since June', 'Imports that used to finish in a couple of minutes now time out around the halfway mark. We have gone back to entering records by hand.', 'performance', 'negative', 'unresolved'),
+  ('T0043', 'C028', '2026-10-08', 'Export always includes the full list', 'There is no way to export just the filtered view, so we strip out the rows we do not need by hand every time we send a report on.', 'export', 'negative', 'unresolved');
 
 -- subscriptions (293 rows)
 INSERT INTO public.subscriptions (customer_id, date, plan, mrr, payment_status, change_type) VALUES
@@ -8889,7 +8891,7 @@ WITH checks(assertion, actual, expected) AS (
   VALUES
     ('customers row count',       (SELECT count(*) FROM public.customers)::text,         '50'),
     ('usage_daily row count',     (SELECT count(*) FROM public.usage_daily)::text,       '8323'),
-    ('support_tickets row count', (SELECT count(*) FROM public.support_tickets)::text,   '41'),
+    ('support_tickets row count', (SELECT count(*) FROM public.support_tickets)::text,   '43'),
     ('subscriptions row count',   (SELECT count(*) FROM public.subscriptions)::text,     '293'),
     ('customer_outcomes count',   (SELECT count(*) FROM public.customer_outcomes)::text, '50'),
     ('evaluation_cases count',    (SELECT count(*) FROM public.evaluation_cases)::text,  '50'),
@@ -8918,6 +8920,29 @@ WITH checks(assertion, actual, expected) AS (
       (SELECT count(*) FROM public.customers c
         WHERE NOT EXISTS (SELECT 1 FROM public.customer_outcomes o
                            WHERE o.customer_id = c.customer_id))::text, '0'),
+    -- Added after active accounts were found billing past their stated next
+    -- renewal: the renewal had not rolled forward, so the dashboard counted
+    -- down to a date the billing record had already passed.
+    ('no active account bills past its renewal',
+      (SELECT count(*) FROM (
+         SELECT c.customer_id
+           FROM public.customers c
+           JOIN public.subscriptions s ON s.customer_id = c.customer_id
+                                      AND s.payment_status = 'paid'
+           JOIN public.customer_outcomes o ON o.customer_id = c.customer_id
+          WHERE o.outcome = 'retained'
+          GROUP BY c.customer_id, c.renewal_date
+         HAVING c.renewal_date <= MAX(s.date)
+       ) stale)::text, '0'),
+    -- A still-paying customer with an account lockout left open for months is
+    -- not how a real support desk behaves; that pattern was corrected in the
+    -- data. Churned accounts keep theirs, where it is part of the churn story.
+    ('no open access ticket on a retained account',
+      (SELECT count(*) FROM public.support_tickets st
+         JOIN public.customer_outcomes co ON co.customer_id = st.customer_id
+        WHERE st.category = 'access'
+          AND st.resolution_status IN ('in_progress', 'unresolved', 'escalated')
+          AND co.outcome = 'retained')::text, '0'),
     ('every customer has usage',
       (SELECT count(*) FROM public.customers c
         WHERE NOT EXISTS (SELECT 1 FROM public.usage_daily u
