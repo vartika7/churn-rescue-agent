@@ -1,27 +1,40 @@
-/* Design tokens ported verbatim from the validated prototype. This is a
-   dark-only internal tool, so there is no light palette by design. */
+/* Design tokens. The palette is the only place colour is defined — every rule
+   below reads these, so re-theming is an edit to this block alone.
+   Originally the validated prototype's dark palette; switched to light on
+   request, with the status accents darkened so they stay legible on white. */
 :root {
-  --bg: #0f1419;
-  --surface: #161d26;
-  --surface-2: #1b2430;
-  --surface-3: #212b38;
-  --border: #28323f;
-  --border-soft: #1e2731;
-  --text: #e7ecf0;
-  --text-dim: #8b98a7;
-  --text-faint: #5c6a78;
-  --intervene: #e8695f;
-  --intervene-bg: rgba(232, 105, 95, 0.12);
-  --monitor: #efa85e;
-  --monitor-bg: rgba(239, 168, 94, 0.12);
-  --healthy: #4fcfb6;
-  --healthy-bg: rgba(79, 207, 182, 0.12);
-  --link: #6fa3e8;
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --surface-2: #eef1f5;
+  --surface-3: #e6eaf0;
+  --border: #dfe4ea;
+  --border-soft: #ebeef2;
+  --text: #1a2230;
+  --text-dim: #5c6a78;
+  --text-faint: #67707b;
+
+  --intervene: #c43d33;
+  --intervene-bg: rgba(196, 61, 51, 0.09);
+  --intervene-line: rgba(196, 61, 51, 0.35);
+
+  --monitor: #9b651b;
+  --monitor-bg: rgba(155, 101, 27, 0.1);
+  --monitor-line: rgba(155, 101, 27, 0.35);
+
+  --healthy: #197e69;
+  --healthy-bg: rgba(25, 126, 105, 0.09);
+  --healthy-line: rgba(25, 126, 105, 0.35);
+
+  --link: #2563c9;
+  --link-bg: rgba(37, 99, 201, 0.08);
+  --link-line: rgba(37, 99, 201, 0.3);
+
+  --shadow: 0 6px 18px rgba(26, 34, 48, 0.12);
 
   --radius: 10px;
   --radius-sm: 6px;
 
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 *,
@@ -215,7 +228,7 @@ h3 {
   gap: 10px;
   align-items: flex-start;
   background: var(--monitor-bg);
-  border: 1px solid rgba(239, 168, 94, 0.3);
+  border: 1px solid var(--monitor-line);
   border-radius: var(--radius-sm);
   padding: 11px 13px;
   font-size: 12.5px;
@@ -246,8 +259,8 @@ h3 {
 }
 
 .notice-info {
-  background: rgba(111, 163, 232, 0.1);
-  border-color: rgba(111, 163, 232, 0.3);
+  background: var(--link-bg);
+  border-color: var(--link-line);
 }
 
 .notice-info strong,
@@ -329,19 +342,19 @@ h3 {
 .badge-intervene {
   color: var(--intervene);
   background: var(--intervene-bg);
-  border-color: rgba(232, 105, 95, 0.32);
+  border-color: var(--intervene-line);
 }
 
 .badge-monitor {
   color: var(--monitor);
   background: var(--monitor-bg);
-  border-color: rgba(239, 168, 94, 0.32);
+  border-color: var(--monitor-line);
 }
 
 .badge-healthy {
   color: var(--healthy);
   background: var(--healthy-bg);
-  border-color: rgba(79, 207, 182, 0.32);
+  border-color: var(--healthy-line);
 }
 
 /* Retrospective grading for churned accounts. Deliberately distinct from
@@ -373,19 +386,19 @@ h3 {
 .tag-positive {
   color: var(--healthy);
   background: var(--healthy-bg);
-  border-color: rgba(79, 207, 182, 0.28);
+  border-color: var(--healthy-line);
 }
 
 .tag-negative {
   color: var(--intervene);
   background: var(--intervene-bg);
-  border-color: rgba(232, 105, 95, 0.28);
+  border-color: var(--intervene-line);
 }
 
 .tag-warn {
   color: var(--monitor);
   background: var(--monitor-bg);
-  border-color: rgba(239, 168, 94, 0.28);
+  border-color: var(--monitor-line);
 }
 
 /* ---------------------------------------------------------------- Controls */
@@ -651,7 +664,7 @@ table.grid tbody tr:hover {
   font-size: 11.5px;
   min-width: 158px;
   pointer-events: none;
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow);
 }
 
 .chart-tooltip-date {
@@ -820,7 +833,7 @@ table.grid tbody tr:hover {
 /* ----------------------------------------------------------------- Error */
 
 .error-box {
-  border: 1px solid rgba(232, 105, 95, 0.4);
+  border: 1px solid var(--intervene-line);
   background: var(--intervene-bg);
   border-radius: var(--radius);
   padding: 18px;
@@ -864,4 +877,22 @@ table.grid tbody tr:hover {
   .meta-item {
     flex-basis: 50%;
   }
+}
+
+/* Reading aids for the usage columns — not risk verdicts. Thresholds mirror
+   EVIDENCE_THRESHOLDS so the table never contradicts the evidence panel. */
+.tone-ok {
+  color: var(--healthy);
+}
+
+.tone-warn {
+  color: var(--monitor);
+}
+
+.tone-bad {
+  color: var(--intervene);
+}
+
+.tone-none {
+  color: var(--text-faint);
 }
