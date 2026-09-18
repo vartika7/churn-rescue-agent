@@ -54,6 +54,8 @@ lib/
   time.ts                  getRealToday vs getLatestRecordedDate + countdowns
   format.ts                Presentation only: dates, currency, percents
   constants.ts             Evidence thresholds + sparkline width
+supabase/
+  schema.sql               Table DDL for all 9 tables (verified against live)
 ```
 
 ## Things that will bite you if you forget them
