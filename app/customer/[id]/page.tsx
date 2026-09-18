@@ -162,18 +162,24 @@ export default async function CustomerPage({
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Evidence</h2>
+          <h2 className="section-title">Evidence — rule-based, not investigated</h2>
           <span className="section-note">
-            Computed from this account&apos;s usage, support and billing records
+            Derived on page load from usage, support and billing rows
           </span>
         </div>
         <PrototypeNote>
-          These items come from a fixed set of threshold rules in the UI layer,
-          not from an AI investigation. They stand in for the Phase 5
-          investigation agent and the thresholds are provisional. They read only
-          usage, support and billing data — never the outcome — so on a churned
-          account they show what was visible <em>before</em> it left. The badge
-          above is separately read from <code>evaluation_cases</code>.
+          <strong>No investigation has run.</strong> The{" "}
+          <code>investigations</code> table is empty and is not queried anywhere
+          in this build. Each item below is computed on page load by a fixed
+          threshold rule in <code>lib/analysis.ts</code> — a sessions decline
+          past a set percentage, a count of zero-session days, an unresolved or
+          escalated ticket, a failed charge. The thresholds are provisional and
+          Phase 5&apos;s investigation agent is expected to replace them.
+          <br />
+          The rules read only usage, support and billing rows — never the
+          outcome — so on a churned account they show what was visible{" "}
+          <em>before</em> it left. The badge above comes from a different
+          source again: <code>evaluation_cases</code>.
         </PrototypeNote>
         <EvidencePanel evidence={evidence} />
       </section>

@@ -14,6 +14,98 @@ export interface SessionsTrend {
   observedDays: number;
 }
 
+export interface ActiveDaysComparison {
+  /** Days with at least one session in the most recent window. */
+  active: number;
+  days: number;
+  /** Same, for the window immediately before it. */
+  priorActive: number;
+  priorDays: number;
+  /** active - priorActive; null when there is no comparable prior window. */
+  delta: number | null;
+}
+
+/**
+ * Counts days with any session in the last `windowDays` on record, against the
+ * `windowDays` before them.
+ *
+ * Complements the sessions trend rather than repeating it: an average cannot
+ * distinguish thirty light days from three heavy ones and twenty-seven silent,
+ * and it is the silence that matters for churn. `rows` must already be in
+ * chronological order.
+ *
+ * `delta` is null unless the prior window is the same length, since "18/30 vs
+ * 9/12" is not a comparison anyone should read at a glance.
+ */
+export function activeDaysComparison(
+  rows: readonly Pick<UsageDaily, "date" | "sessions">[],
+  windowDays = 30,
+): ActiveDaysComparison {
+  const recent = rows.slice(-windowDays);
+  const prior = rows.slice(-windowDays * 2, -windowDays);
+
+  const active = recent.filter((r) => r.sessions > 0).length;
+  const priorActive = prior.filter((r) => r.sessions > 0).length;
+
+  return {
+    active,
+    days: recent.length,
+    priorActive,
+    priorDays: prior.length,
+    delta: prior.length === recent.length ? active - priorActive : null,
+  };
+}
+
+export interface RecentTrend {
+  /** Percent change from the prior window to the most recent one. */
+  pctChange: number | null;
+  recentAvg: number;
+  priorAvg: number;
+  /** Actual sizes, which are smaller than `windowDays` on a short history. */
+  recentDays: number;
+  priorDays: number;
+}
+
+/**
+ * Compares the most recent `windowDays` on record against the `windowDays`
+ * immediately before them — two adjacent windows, nothing discarded.
+ *
+ * This is what the dashboard column shows. It is deliberately NOT
+ * `sessionsTrend`: that one splits a customer's entire observed history into
+ * thirds and throws the middle third away, which is defensible for a
+ * whole-history assessment but reads as nonsense in a table column headed with
+ * a day count. Adjacent windows are what someone triaging a list expects from
+ * "30d vs prior 30d", and they can be checked by eye against the sparkline.
+ *
+ * `sessions` must already be in chronological order. Returns null for
+ * `pctChange` when there is no prior window to compare against, or when the
+ * prior window is all zeros (percent change from zero is undefined, not
+ * infinite).
+ */
+export function recentVsPriorTrend(
+  sessions: number[],
+  windowDays = 30,
+): RecentTrend {
+  const recent = sessions.slice(-windowDays);
+  const prior = sessions.slice(-windowDays * 2, -windowDays);
+
+  const recentAvg = mean(recent);
+  const priorAvg = mean(prior);
+
+  let pctChange: number | null;
+  if (prior.length === 0) pctChange = null;
+  else if (priorAvg === 0) pctChange = recentAvg === 0 ? 0 : null;
+  else pctChange = ((recentAvg - priorAvg) / priorAvg) * 100;
+
+  return {
+    pctChange,
+    recentAvg,
+    priorAvg,
+    recentDays: recent.length,
+    priorDays: prior.length,
+  };
+}
+
 /**
  * Compares average sessions in the earliest third of a run of days against the
  * most recent third. `sessions` must already be in chronological order.

@@ -35,7 +35,15 @@ export interface DashboardRow {
   sparklineDays: number;
   /** End of the sparkline's on-record window; null when there is no usage. */
   recordedThroughLabel: string | null;
+  /** Last 30 days on record vs the 30 before; null when there is no prior window. */
   trendPct: number | null;
+  trendWindowDays: number;
+  /** Days with at least one session, out of activityWindowDays on record. */
+  activeDays: number;
+  activityWindowDays: number;
+  activeDaysPrior: number;
+  /** activeDays - activeDaysPrior; null when the prior window is a different length. */
+  activeDaysDelta: number | null;
 
   /** Present-tense placeholder status. Active cohort only. */
   recommendation: Recommendation | null;
@@ -64,6 +72,7 @@ type SortKey =
   | "plan"
   | "mrr"
   | "trend"
+  | "active"
   | "status"
   | "renewal"
   | "churned";
@@ -79,7 +88,8 @@ const ACTIVE_COLUMNS: Column[] = [
   { key: "industry", label: "Industry" },
   { key: "plan", label: "Plan" },
   { key: "mrr", label: "MRR", numeric: true },
-  { key: "trend", label: "90d sessions" },
+  { key: "trend", label: "Sessions 30d vs prior" },
+  { key: "active", label: "Active 30d", numeric: true },
   { key: "status", label: "Status" },
   { key: "renewal", label: "Renewal" },
 ];
@@ -92,7 +102,8 @@ const LOST_COLUMNS: Column[] = [
   { key: "industry", label: "Industry" },
   { key: "plan", label: "Plan" },
   { key: "mrr", label: "MRR lost", numeric: true },
-  { key: "trend", label: "Final 90d sessions" },
+  { key: "trend", label: "Sessions 30d pre-churn vs prior" },
+  { key: "active", label: "Active 30d pre-churn", numeric: true },
   { key: "status", label: "Retrospective grading" },
   { key: "churned", label: "Churned" },
 ];
@@ -104,6 +115,7 @@ const DEFAULT_DIR: Record<SortKey, "asc" | "desc"> = {
   plan: "asc",
   mrr: "desc",
   trend: "asc",
+  active: "asc",
   status: "asc",
   renewal: "asc",
   churned: "desc",
@@ -170,6 +182,8 @@ export function CustomerTable({
                 direction || a.company.localeCompare(b.company)
             : ((a.lost?.badgeRank ?? 9) - (b.lost?.badgeRank ?? 9)) *
                 direction || a.company.localeCompare(b.company);
+        case "active":
+          return (a.activeDays - b.activeDays) * direction;
         case "renewal":
           return (a.renewalDays - b.renewalDays) * direction;
         case "churned":
@@ -313,9 +327,27 @@ export function CustomerTable({
                           : ""
                       }`}
                     />
-                    <span className="trend-delta mono">
+                    <span
+                      className={`trend-delta mono ${trendToneClass(row.trendPct)}`}
+                      title={`Average daily sessions over the last ${row.trendWindowDays} days on record, compared with the ${row.trendWindowDays} days before them. The sparkline covers ${row.sparklineDays} days. ${windowEndNote(row, variant)}`}
+                    >
                       {formatPercent(row.trendPct)}
                     </span>
+                  </div>
+                </td>
+                <td
+                  className="num-cell"
+                  title={`Days with at least one session in the last ${row.activityWindowDays} days on record, against the ${row.activityWindowDays} before them (${row.activeDaysPrior}/${row.activityWindowDays}). Counts silence, which an average cannot show. ${windowEndNote(row, variant)}`}
+                >
+                  <span
+                    className={`mono ${activityToneClass(row.activeDays, row.activityWindowDays)}`}
+                  >
+                    {row.activeDays}/{row.activityWindowDays}
+                  </span>
+                  <div className="cell-sub mono">
+                    {row.activeDaysDelta === null
+                      ? "no prior"
+                      : `${row.activeDaysDelta > 0 ? "+" : ""}${row.activeDaysDelta} vs prior`}
                   </div>
                 </td>
                 <td>
@@ -353,4 +385,40 @@ export function CustomerTable({
       </div>
     </>
   );
+}
+
+/**
+ * Colour is a reading aid, not a risk verdict — the only risk signal in this
+ * build is the clearly-labelled placeholder badge. These thresholds mirror
+ * EVIDENCE_THRESHOLDS so the table and the evidence panel never contradict
+ * each other on the same account.
+ */
+function trendToneClass(pct: number | null): string {
+  if (pct === null) return "tone-none";
+  if (pct <= -25) return "tone-bad";
+  if (pct <= -8) return "tone-warn";
+  return "tone-ok";
+}
+
+function activityToneClass(activeDays: number, windowDays: number): string {
+  if (windowDays === 0) return "tone-none";
+  const silent = windowDays - activeDays;
+  if (silent >= 10) return "tone-bad";
+  if (silent > 3) return "tone-warn";
+  return "tone-ok";
+}
+
+/**
+ * Says which day a usage window actually ends on.
+ *
+ * Without this the figures read as "the last 30 days", which they are not: they
+ * end at each account's last day on record. For a churned account that is its
+ * outcome_date, so an account that left in May shows its final 30 days alive,
+ * not an empty recent window — the single most confusable thing in this table.
+ */
+function windowEndNote(row: DashboardRow, variant: TableVariant): string {
+  if (!row.recordedThroughLabel) return "";
+  return variant === "lost"
+    ? `Window ends ${row.recordedThroughLabel}, the day this account churned — not the last 30 calendar days.`
+    : `Window ends ${row.recordedThroughLabel}, the last day with usage on record.`;
 }
