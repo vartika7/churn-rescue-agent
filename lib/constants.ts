@@ -53,3 +53,40 @@ export const EVIDENCE_THRESHOLDS = {
   /** Zero-session days at or below this count are contradicting evidence. */
   zeroActivityContradictingDays: 3,
 } as const;
+
+/* ------------------------------------------------------------------ *
+ * Phase 4 — risk engine
+ * ------------------------------------------------------------------ */
+
+/**
+ * Points each signal contributes. Additive and capped at 100.
+ *
+ * Deliberately readable numbers rather than tuned coefficients: this is a
+ * deterministic engine whose job is to be explainable and gradeable, and
+ * Phase 7 is where the numbers get moved on evidence rather than instinct.
+ * Nothing here is fitted to the ground truth — that would be training on the
+ * test set.
+ */
+export const RISK_WEIGHTS = {
+  /** Last 30 days on record vs the prior 30. */
+  recentTrend: { severe: 25, major: 18, minor: 8 },
+  /** Whole observed history, first third vs last. */
+  historyTrend: { major: 15, minor: 6 },
+  /** Days with no sessions inside the last 30 on record. */
+  silence: { severe: 25, major: 18, minor: 8 },
+  /** Consecutive silent days at the very end of the record. */
+  trailingSilence: { minDays: 7, points: 15 },
+  support: {
+    escalatedEach: 12,
+    escalatedCap: 24,
+    unresolvedEach: 8,
+    unresolvedCap: 16,
+  },
+  billing: { failedCharge: 20 },
+} as const;
+
+/**
+ * Score bands. The vocabulary matches `evaluation_cases.expected_risk_level`
+ * (high / medium / low) so Phase 7 can grade the engine without translating.
+ */
+export const RISK_LEVEL_THRESHOLDS = { high: 50, medium: 25 } as const;

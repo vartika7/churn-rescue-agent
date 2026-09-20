@@ -56,9 +56,40 @@ lib/
   constants.ts             Evidence thresholds + sparkline width
 supabase/
   schema.sql               Table DDL for all 9 tables (verified against live)
-  seed.sql                 The v2 dataset as SQL, 8,807 rows, self-verifying
+  seed.sql                 The dataset as SQL, self-verifying
   seed/*.csv               The same rows as CSV, numbered in FK order
+  shift_dates.sql          Realign the dataset to the calendar
+scripts/
+  export-seed.mjs          Re-export seed.sql + CSVs from the live database
 ```
+
+### Keeping the dataset aligned
+
+The data is a fixed snapshot but the calendar keeps moving, so it drifts: usage
+stops at a hard end date while today walks past it, and renewal countdowns slide
+from upcoming to overdue. Two commands fix it:
+
+```bash
+# 1. in the Supabase SQL editor
+#    slides every date so the newest usage row lands on CURRENT_DATE
+supabase/shift_dates.sql
+
+# 2. locally, so the committed snapshot stops being a lie
+node scripts/export-seed.mjs
+```
+
+The shift is a **uniform translation** — every date in every table moves by the
+same number of days — so gaps, orderings and every invariant survive by
+construction. It computes its own offset and is a no-op when already aligned.
+
+Run it a few days before any demo rather than months ahead: renewals sit within
+30 days of the data end, so the picture is good for roughly a fortnight after a
+shift and degrades after that.
+
+`git status` cannot tell you the seed has gone stale, because the drift lives in
+Supabase rather than the working tree. `export-seed.mjs` parses everything it
+writes back and diffs it against the source, so an escaping bug fails there
+rather than silently at load time.
 
 ### Restoring the database
 
