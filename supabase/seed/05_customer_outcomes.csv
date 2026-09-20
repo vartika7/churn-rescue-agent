@@ -1,51 +1,51 @@
 customer_id,outcome,outcome_date,reason
-C001,retained,2026-10-31,
-C002,retained,2026-10-31,
-C003,retained,2026-10-31,
-C004,retained,2026-10-31,
-C005,churned,2026-08-10,Gradual disengagement; no single clear trigger identified
-C006,retained,2026-10-31,
-C007,retained,2026-10-31,
-C008,churned,2026-06-11,Acquired by a competitor; no product signal available
-C009,retained,2026-10-31,
-C010,retained,2026-10-31,
-C011,retained,2026-10-31,
-C012,retained,2026-10-31,
-C013,churned,2026-07-30,Disengagement following unresolved product issues
-C014,churned,2026-06-22,Payment/renewal failure despite continued product usage
-C015,retained,2026-10-31,
-C016,churned,2026-05-17,Disengagement following unresolved product issues
-C017,retained,2026-10-31,
-C018,retained,2026-10-31,
-C019,retained,2026-10-31,
-C020,churned,2026-07-18,Disengagement following unresolved product issues
-C021,churned,2026-07-21,Disengagement following unresolved product issues
-C022,retained,2026-10-31,
-C023,retained,2026-10-31,
-C024,retained,2026-10-31,
-C025,retained,2026-10-31,
-C026,retained,2026-10-31,
-C027,retained,2026-10-31,
-C028,retained,2026-10-31,
-C029,retained,2026-10-31,
-C030,retained,2026-10-31,
-C031,retained,2026-10-31,
-C032,retained,2026-10-31,
-C033,retained,2026-10-31,
-C034,retained,2026-10-31,
-C035,retained,2026-10-31,
-C036,churned,2026-09-15,Gradual disengagement; no single clear trigger identified
-C037,retained,2026-10-31,
-C038,retained,2026-10-31,
-C039,retained,2026-10-31,
-C040,retained,2026-10-31,
-C041,churned,2026-09-26,Disengagement following unresolved product issues
-C042,retained,2026-10-31,
-C043,retained,2026-10-31,
-C044,retained,2026-10-31,
-C045,retained,2026-10-31,
-C046,retained,2026-10-31,
-C047,retained,2026-10-31,
-C048,churned,2026-05-14,Disengagement following unresolved product issues
-C049,retained,2026-10-31,
-C050,retained,2026-10-31,
+C001,retained,2026-09-20,
+C002,retained,2026-09-20,
+C003,retained,2026-09-20,
+C004,retained,2026-09-20,
+C005,churned,2026-06-30,Gradual disengagement; no single clear trigger identified
+C006,retained,2026-09-20,
+C007,retained,2026-09-20,
+C008,churned,2026-05-01,Acquired by a competitor; no product signal available
+C009,retained,2026-09-20,
+C010,retained,2026-09-20,
+C011,retained,2026-09-20,
+C012,retained,2026-09-20,
+C013,churned,2026-06-19,Disengagement following unresolved product issues
+C014,churned,2026-05-12,Payment/renewal failure despite continued product usage
+C015,retained,2026-09-20,
+C016,churned,2026-04-06,Disengagement following unresolved product issues
+C017,retained,2026-09-20,
+C018,retained,2026-09-20,
+C019,retained,2026-09-20,
+C020,churned,2026-06-07,Disengagement following unresolved product issues
+C021,churned,2026-06-10,Disengagement following unresolved product issues
+C022,retained,2026-09-20,
+C023,retained,2026-09-20,
+C024,retained,2026-09-20,
+C025,retained,2026-09-20,
+C026,retained,2026-09-20,
+C027,retained,2026-09-20,
+C028,retained,2026-09-20,
+C029,retained,2026-09-20,
+C030,retained,2026-09-20,
+C031,retained,2026-09-20,
+C032,retained,2026-09-20,
+C033,retained,2026-09-20,
+C034,retained,2026-09-20,
+C035,retained,2026-09-20,
+C036,churned,2026-08-05,Gradual disengagement; no single clear trigger identified
+C037,retained,2026-09-20,
+C038,retained,2026-09-20,
+C039,retained,2026-09-20,
+C040,retained,2026-09-20,
+C041,churned,2026-08-16,Disengagement following unresolved product issues
+C042,retained,2026-09-20,
+C043,retained,2026-09-20,
+C044,retained,2026-09-20,
+C045,retained,2026-09-20,
+C046,retained,2026-09-20,
+C047,retained,2026-09-20,
+C048,churned,2026-04-03,Disengagement following unresolved product issues
+C049,retained,2026-09-20,
+C050,retained,2026-09-20,
