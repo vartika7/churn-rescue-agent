@@ -20,6 +20,29 @@ interface Point {
   row: UsageDaily;
 }
 
+/**
+ * Axis ticks at round numbers, with the top of the axis at or above the peak.
+ *
+ * Quarters of the observed peak would label a peak of 7 as 1.75 / 3.5 / 5.25,
+ * and sessions are whole numbers, so the step is forced to an integer and the
+ * axis maximum rounded up to a multiple of it. That also stops the line
+ * touching the very top of the plot, which read as clipped.
+ */
+function niceScale(dataMax: number, targetTicks = 4) {
+  const rough = Math.max(dataMax, 1) / targetTicks;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(rough)));
+  const step = Math.max(
+    1,
+    [1, 2, 2.5, 5, 10].map((m) => m * magnitude).find((c) => c >= rough) ??
+      10 * magnitude,
+  );
+  const axisMax = Math.max(step, Math.ceil(dataMax / step) * step);
+
+  const ticks: number[] = [];
+  for (let v = 0; v <= axisMax + 1e-9; v += step) ticks.push(Math.round(v));
+  return { axisMax, ticks };
+}
+
 export function UsageChart({ data }: { data: UsageDaily[] }) {
   const gradientId = useId();
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -29,18 +52,22 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
     [data],
   );
 
-  const { points, maxSessions, linePath, areaPath } = useMemo(() => {
+  const { points, maxSessions, axisMax, ticks, linePath, areaPath } = useMemo(() => {
     const n = sorted.length;
     if (n === 0) {
       return {
         points: [] as Point[],
         maxSessions: 0,
+        axisMax: 1,
+        ticks: [0, 1],
         linePath: "",
         areaPath: "",
       };
     }
 
-    const max = Math.max(...sorted.map((d) => d.sessions), 1);
+    const dataMax = Math.max(...sorted.map((d) => d.sessions), 1);
+    const { axisMax, ticks } = niceScale(dataMax);
+    const max = axisMax;
     const plotH = VB_H - PAD_T - PAD_B;
 
     const pts: Point[] = sorted.map((row, i) => ({
@@ -59,7 +86,14 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
       `${line} L${pts[pts.length - 1].x.toFixed(2)} ${VB_H} ` +
       `L${pts[0].x.toFixed(2)} ${VB_H} Z`;
 
-    return { points: pts, maxSessions: max, linePath: line, areaPath: area };
+    return {
+      points: pts,
+      maxSessions: dataMax,
+      axisMax,
+      ticks,
+      linePath: line,
+      areaPath: area,
+    };
   }, [sorted]);
 
   const indexFromClientX = useCallback(
@@ -112,18 +146,30 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
             </span>
             <span className="chart-readout-idle">
               {sorted.length} observed days · peak {maxSessions} sessions/day ·
-              hover or drag for a single day
+              hover or touch for a single day
             </span>
           </>
         )}
       </div>
-      <svg
+      <div className="chart-plot">
+        <div className="chart-yaxis" aria-hidden="true">
+          {ticks.map((value) => (
+            <span
+              key={value}
+              className="chart-ytick mono"
+              style={{ top: `${((PAD_T + (VB_H - PAD_T - PAD_B) * (1 - value / axisMax)) / VB_H) * 100}%` }}
+            >
+              {value}
+            </span>
+          ))}
+        </div>
+        <svg
         className="chart-svg"
         viewBox={`0 0 ${VB_W} ${VB_H}`}
         preserveAspectRatio="none"
         style={{ aspectRatio: `${VB_W} / ${VB_H}` }}
         role="img"
-        aria-label={`Daily sessions from ${formatDate(sorted[0].date)} to ${formatDate(
+        aria-label={`Daily sessions, 0 to ${axisMax} per day, from ${formatDate(sorted[0].date)} to ${formatDate(
           sorted[sorted.length - 1].date,
         )}. Peak ${maxSessions} sessions.`}
         onMouseMove={(event) => {
@@ -149,12 +195,13 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
           </linearGradient>
         </defs>
 
-        {/* Horizontal guides at quarters of the peak. */}
-        {[0.25, 0.5, 0.75].map((fraction) => {
-          const y = PAD_T + (VB_H - PAD_T - PAD_B) * (1 - fraction);
+        {/* One guide per axis tick, so the labels in the gutter line up with
+            an actual gridline rather than sitting between two of them. */}
+        {ticks.map((value) => {
+          const y = PAD_T + (VB_H - PAD_T - PAD_B) * (1 - value / axisMax);
           return (
             <line
-              key={fraction}
+              key={value}
               x1="0"
               x2={VB_W}
               y1={y}
@@ -210,7 +257,8 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
             />
           </g>
         )}
-      </svg>
+        </svg>
+      </div>
 
       <div className="chart-axis mono">
         {axisTicks.map((tick) => (

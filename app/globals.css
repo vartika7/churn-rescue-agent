@@ -629,6 +629,33 @@ table.grid tbody tr:hover {
   width: 100%;
 }
 
+/* Left gutter holds the y-axis labels. They are HTML rather than SVG text
+   because the plot uses preserveAspectRatio="none" and scales with the
+   viewport — SVG text would stretch with it and shrink to unreadable on a
+   phone. The gutter spans the same height as the svg, so a label's top
+   percentage maps straight onto the plot's vertical scale. */
+.chart-plot {
+  position: relative;
+  padding-left: 30px;
+}
+
+.chart-yaxis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+}
+
+.chart-ytick {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  line-height: 1;
+}
+
 .chart-svg {
   display: block;
   width: 100%;
@@ -640,6 +667,7 @@ table.grid tbody tr:hover {
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
+  padding-left: 30px; /* matches .chart-plot, so ticks align with the plot */
   font-size: 11px;
   color: var(--text-faint);
   gap: 8px;
