@@ -4,7 +4,7 @@ import { test, describe } from "node:test";
 import { MIN_OBSERVED_DAYS_FOR_CONFIDENCE } from "../lib/constants";
 import { evaluate, type AccountData, type EvalInput } from "../lib/evaluation";
 import type { CustomerOutcome, EvaluationCase } from "../lib/types";
-import { block, spans, ticket, usage } from "./helpers";
+import { block, charge, spans, ticket, usage } from "./helpers";
 
 /**
  * The harness grades the engine, so it needs its own grading. A metric that
@@ -80,6 +80,34 @@ describe("churn detection", () => {
     );
     assert.equal(r.churn.flaggedAtChurn, 0);
     assert.equal(r.churn.recall, 0);
+  });
+
+  // Pins what "flagged" means. Every other fixture here scores `high`, so
+  // narrowing the definition to high-only would otherwise pass unnoticed — and
+  // a retention tool that only counts its loudest verdict as a catch is
+  // measuring the wrong thing.
+  test("a medium verdict counts as caught, not just high", () => {
+    const r = evaluate(
+      input(
+        [
+          [
+            "X7",
+            {
+              usage: steady(),
+              tickets: [ticket({ resolution_status: "escalated" })],
+              subscriptions: [charge({ payment_status: "past_due" })],
+            },
+          ],
+        ],
+        [churned("X7")],
+        [evalCase("X7")],
+      ),
+    );
+    const a = r.churn.accounts[0];
+    assert.equal(a.level, "medium", "fixture must land in the middle band");
+    assert.equal(a.flagged, true);
+    assert.equal(r.churn.flaggedAtChurn, 1);
+    assert.equal(r.churn.highAtChurn, 0);
   });
 
   test("ignores retained accounts entirely", () => {
@@ -176,10 +204,12 @@ describe("lead time observability", () => {
 });
 
 describe("peak score", () => {
-  test("records a peak earlier than the churn-date score", () => {
-    // Collapses mid-record, then recovers before churning.
+  // The C005 shape, which is why peak is tracked at all: an account that goes
+  // quiet, recovers, and then leaves anyway. Asserting only `peak >= score`
+  // would hold even if peak were never updated, so this pins the strict case.
+  test("records a peak strictly higher than the churn-date score", () => {
     const u = usage(
-      [...spans([60, 10]), ...block(20, 1), ...spans([40, 10])],
+      [...spans([30, 10]), ...block(20, 1), ...spans([60, 10])],
       CHURN_DATE,
     );
     const r = evaluate(
@@ -187,10 +217,13 @@ describe("peak score", () => {
     );
     const a = r.churn.accounts[0];
     assert.ok(
-      a.peakScore >= a.score,
-      "peak must be at least the final score by construction",
+      a.peakScore > a.score,
+      `peak ${a.peakScore} should exceed the churn-date score ${a.score}`,
     );
-    assert.ok(a.peakDaysBefore >= 0);
+    assert.equal(a.peakDaysBefore, 60);
+    // Flagged 60 days out, and looking healthy again by the time it left.
+    assert.equal(a.firstFlaggedDaysBefore, 60);
+    assert.equal(a.flagged, false);
   });
 
   test("peak equals the final score for a monotonic decline", () => {
