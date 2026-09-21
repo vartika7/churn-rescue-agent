@@ -82,20 +82,41 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
   }
 
   const active = activeIndex === null ? null : points[activeIndex];
-  const activePct = active ? (active.x / VB_W) * 100 : 0;
-
-  // Keep the tooltip inside the chart at both ends instead of letting it clip.
-  const tooltipShift =
-    activePct < 16
-      ? "translateX(0)"
-      : activePct > 84
-        ? "translateX(-100%)"
-        : "translateX(-50%)";
-
   const axisTicks = pickAxisTicks(sorted);
 
+  /* The day's figures are read out ABOVE the plot, not floated inside it.
+     A tooltip positioned over the chart necessarily hides part of the shape
+     you are trying to read, and dragging across the series drags that blind
+     spot with it — exactly over the peaks, since the tooltip sat at the top.
+     The strip is always present, showing the series summary when nothing is
+     hovered, so switching between the two states shifts no layout. */
   return (
     <div className="chart-shell">
+      <div className="chart-readout" aria-live="polite">
+        {active ? (
+          <>
+            <span className="chart-readout-date mono">
+              {formatDate(active.row.date)}
+            </span>
+            <span className="chart-readout-metrics">
+              <Metric label="Sessions" value={active.row.sessions} strong />
+              <Metric label="Logins" value={active.row.logins} />
+              <Metric label="Key actions" value={active.row.key_actions} />
+              <Metric label="Feature usage" value={active.row.feature_usage} />
+            </span>
+          </>
+        ) : (
+          <>
+            <span className="chart-readout-date mono">
+              {formatDate(sorted[0].date)} → {formatDate(sorted[sorted.length - 1].date)}
+            </span>
+            <span className="chart-readout-idle">
+              {sorted.length} observed days · peak {maxSessions} sessions/day ·
+              hover or drag for a single day
+            </span>
+          </>
+        )}
+      </div>
       <svg
         className="chart-svg"
         viewBox={`0 0 ${VB_W} ${VB_H}`}
@@ -191,51 +212,29 @@ export function UsageChart({ data }: { data: UsageDaily[] }) {
         )}
       </svg>
 
-      <span className="chart-yhint mono">peak {maxSessions} sessions/day</span>
-
-      {active && (
-        <div
-          className="chart-tooltip"
-          style={{ left: `${activePct}%`, transform: tooltipShift }}
-        >
-          <div className="chart-tooltip-date">
-            {formatDate(active.row.date)}
-          </div>
-          <div className="chart-tooltip-row">
-            <span>Sessions</span>
-            <span className="mono">{formatMetric(active.row.sessions)}</span>
-          </div>
-          <div className="chart-tooltip-row">
-            <span>Logins</span>
-            <span className="mono">{formatMetric(active.row.logins)}</span>
-          </div>
-          <div className="chart-tooltip-row">
-            <span>Key actions</span>
-            <span className="mono">{formatMetric(active.row.key_actions)}</span>
-          </div>
-          <div className="chart-tooltip-row">
-            <span>Feature usage</span>
-            <span className="mono">
-              {formatMetric(active.row.feature_usage)}
-            </span>
-          </div>
-        </div>
-      )}
-
       <div className="chart-axis mono">
         {axisTicks.map((tick) => (
           <span key={tick}>{formatDate(tick)}</span>
         ))}
       </div>
-
-      <div className="chart-legend">
-        <span>
-          {sorted.length} observed days · {formatDate(sorted[0].date)} →{" "}
-          {formatDate(sorted[sorted.length - 1].date)}
-        </span>
-        <span>Hover or drag across the chart for a day&apos;s detail</span>
-      </div>
     </div>
+  );
+}
+
+function Metric({
+  label,
+  value,
+  strong,
+}: {
+  label: string;
+  value: unknown;
+  strong?: boolean;
+}) {
+  return (
+    <span className={`chart-metric${strong ? " chart-metric-strong" : ""}`}>
+      <span className="chart-metric-label">{label}</span>
+      <span className="chart-metric-value mono">{formatMetric(value)}</span>
+    </span>
   );
 }
 
