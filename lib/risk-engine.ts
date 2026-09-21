@@ -30,8 +30,17 @@ export interface RiskSignal {
   /** Stable identifier, safe to persist and group on. */
   key: string;
   source: SignalSource;
-  /** One line, already phrased for display. */
+  /** One line, already phrased to stand alone in the evidence list. */
   headline: string;
+  /**
+   * Short fragment for the one-line `reason` summary.
+   *
+   * Headlines each name their own window so they read correctly in isolation,
+   * but strung together they repeat it — "sessions down 25% in the last 30 days
+   * on record; 11 of the last 30 days on record had no sessions". The terse
+   * form drops the shared context the sentence states once.
+   */
+  terse?: string;
   detail?: string;
   /** Points contributed to the total. Zero means "checked, found nothing". */
   points: number;
@@ -124,6 +133,7 @@ export function scoreCustomer(input: ScoreInput): RiskAssessment {
         points > 0
           ? `Sessions down ${Math.abs(pct)}% in the last 30 days on record`
           : `Sessions ${pct >= 0 ? "up" : "down"} ${Math.abs(pct)}% over the last 30 days on record`,
+      terse: `sessions down ${Math.abs(pct)}%`,
       detail: `${recent.priorAvg.toFixed(1)} → ${recent.recentAvg.toFixed(1)} sessions/day against the prior 30.`,
       points,
       direction: points > 0 ? "supporting" : "contradicting",
@@ -143,6 +153,7 @@ export function scoreCustomer(input: ScoreInput): RiskAssessment {
         points > 0
           ? `Sustained decline of ${Math.abs(pct)}% across observed history`
           : `No sustained decline across observed history (${pct >= 0 ? "+" : ""}${pct}%)`,
+      terse: `a ${Math.abs(pct)}% decline over full history`,
       detail: `First third averaged ${longRun.earlyAvg.toFixed(1)}/day, last third ${longRun.lateAvg.toFixed(1)}/day over ${longRun.observedDays} days.`,
       points,
       direction: points > 0 ? "supporting" : "contradicting",
@@ -169,6 +180,7 @@ export function scoreCustomer(input: ScoreInput): RiskAssessment {
         points > 0
           ? `${silent} of the last ${activity.days} days on record had no sessions`
           : `Active on ${activity.active} of the last ${activity.days} days on record`,
+      terse: `${silent} silent days in ${activity.days}`,
       detail:
         activity.delta === null
           ? undefined
@@ -185,6 +197,7 @@ export function scoreCustomer(input: ScoreInput): RiskAssessment {
       key: "usage.trailing_silence",
       source: "Usage",
       headline: `No sessions at all for the last ${trailing} days on record`,
+      terse: `${trailing} days silent to the end of the record`,
       detail: "Ends the observation window silent rather than merely quieter.",
       points: RISK_WEIGHTS.trailingSilence.points,
       direction: "supporting",
@@ -359,9 +372,10 @@ function buildReason(level: RiskLevel, signals: readonly RiskSignal[]): string {
     return "No risk signals fired across usage, support or billing.";
   }
 
-  const lead = firing
-    .slice(0, 3)
-    .map((s) => s.headline.charAt(0).toLowerCase() + s.headline.slice(1));
-  const rest = firing.length > 3 ? `, and ${firing.length - 3} more` : "";
-  return `Scored ${level} on ${lead.join("; ")}${rest}.`;
+  const lead = firing.slice(0, 3).map((s) => {
+    const text = s.terse ?? s.headline;
+    return text.charAt(0).toLowerCase() + text.slice(1);
+  });
+  const rest = firing.length > 3 ? `, plus ${firing.length - 3} more` : "";
+  return `Scored ${level}: ${lead.join(", ")}${rest}.`;
 }
