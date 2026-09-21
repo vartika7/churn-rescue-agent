@@ -97,3 +97,14 @@ export const RISK_WEIGHTS = {
  * (high / medium / low) so Phase 7 can grade the engine without translating.
  */
 export const RISK_LEVEL_THRESHOLDS = { high: 50, medium: 25 } as const;
+
+/**
+ * Below this many days of records the engine calls its own read low-confidence:
+ * two of the three usage signals compare a 30-day window against the 30 before
+ * it, so under 60 days there is no complete prior window to compare against.
+ *
+ * Phase 7 reads the same number. Grading the engine on an account with a
+ * fortnight of history and scoring the "miss" against it measures the dataset,
+ * not the engine.
+ */
+export const MIN_OBSERVED_DAYS_FOR_CONFIDENCE = 60;
