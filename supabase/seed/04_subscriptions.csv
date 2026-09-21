@@ -222,7 +222,7 @@ C038,2026-05-05,Pro,605,paid,new
 C038,2026-06-04,Pro,605,paid,renewal
 C038,2026-07-04,Pro,605,paid,renewal
 C038,2026-08-03,Pro,605,paid,renewal
-C038,2026-09-02,Pro,605,paid,renewal
+C038,2026-09-02,Pro,605,past_due,renewal
 C039,2026-03-31,Growth,215,paid,new
 C039,2026-04-30,Growth,215,paid,renewal
 C039,2026-05-30,Growth,215,paid,renewal

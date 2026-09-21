@@ -33,10 +33,10 @@ C031,retained,low,no_action_needed,"Healthy, stable usage across the observed pe
 C032,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
 C033,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
 C034,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
-C035,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C035,retained,high,intervene,"Engagement collapsed over the last six weeks while a workflow fault raised in April remains unresolved; still paying, so intervention is still possible",active_at_risk
 C036,churned,high,intervene,Gradual engagement decline; weaker corroborating evidence than typical at-risk accounts,difficult_intervene
 C037,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
-C038,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C038,retained,high,intervene,"Steady usage decline alongside a failed payment on the most recent charge; disengagement and billing failure together, caught before renewal",active_at_risk
 C039,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
 C040,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
 C041,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
