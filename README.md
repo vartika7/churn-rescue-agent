@@ -1,7 +1,8 @@
-# Churn Rescue Agent — Phase 3 (live dashboard)
+# Churn Rescue Agent
 
-Internal customer-success console. Next.js App Router reading live from
-Supabase, replacing the static HTML prototype's embedded JSON.
+Internal customer-success console for retention risk triage. Next.js App Router
+reading live from Supabase, with a deterministic risk engine that is unit-tested
+and graded against held-out churn outcomes (`EVALUATION.md`).
 
 ## Setup
 
@@ -31,7 +32,8 @@ If either is missing the pages render a setup message instead of crashing.
 | `npm run dev`       | Local dev server                       |
 | `npm run build`     | Production build                       |
 | `npm run typecheck` | `tsc --noEmit`                         |
-| `npm test`          | Engine unit tests (no database needed) |
+| `npm test`          | Unit tests — engine, harness, dates, display (no database) |
+| `npm run evaluate`  | Grade the engine against the seed, write `EVALUATION.md` |
 
 ## Structure
 
@@ -50,6 +52,7 @@ components/
   SetupError.tsx           Readable credentials / connection failure
 lib/
   risk-engine.ts           Phase 4 scoring: signals, points, level, confidence
+  evaluation.ts            Phase 7 grading; the only module reading outcomes
   risk-store.ts            Persists assessments; active customers only
   risk-display.ts          Engine output → badges and labels
   supabase.ts              Server-only client + paginated `selectAll`
@@ -66,12 +69,20 @@ supabase/
   shift_dates.sql          Realign the dataset to the calendar
 scripts/
   export-seed.mjs          Re-export seed.sql + CSVs from the live database
+  evaluate.ts              Grade the engine, write EVALUATION.md
+test/
+  helpers.ts               Synthetic fixture builders — no database
+  risk-engine.test.ts      Signal bands, score cap, confidence, leakage
+  evaluation.test.ts       The harness's own metric maths
+  time.test.ts             The two date reference points
+  risk-display.test.ts     Past-tense rule for churned accounts
+EVALUATION.md              Generated: how good is the engine?
 ```
 
 ### Tests
 
-`npm test` runs `node:test` through `tsx`, 68 cases over the risk engine, the
-two date reference points and the display helpers. No database, no network, no
+`npm test` runs `node:test` through `tsx`, 89 cases over the risk engine, the
+Phase 7 harness, the two date reference points and the display helpers. No database, no network, no
 seed file: every fixture is built in `test/helpers.ts`.
 
 That is deliberate. The signal bands are step functions, so a test asserting
@@ -91,6 +102,31 @@ threshold, removing the 90-day history gate, shifting the silence band,
 removing the escalated cap, folding `overdue` back into `soon`, removing the
 score cap and making the churned label present-tense each produce failures.
 A suite that cannot fail is not evidence of anything.
+
+### Evaluation
+
+`npm run evaluate` grades the engine and regenerates `EVALUATION.md`. Like the
+tests it reads the committed seed rather than Supabase, so the grade is
+reproducible from a clean clone and pinned to a known dataset instead of to
+whatever the database holds today.
+
+`lib/evaluation.ts` is the one module allowed to read `customer_outcomes` and
+`evaluation_cases` — grading needs the answers, that is what grading is. What
+matters is that nothing flows back: it calls `scoreCustomer` with exactly the
+inputs the live path uses and only ever compares the result.
+
+Two findings are worth knowing before reading anything else in this repo:
+
+- **The engine's middle band is under-sensitive.** 5 of 6 accounts a human
+  graded `medium` score `low`. Two minor signals at 8 points each total 16,
+  under the 25 needed to surface.
+- **The score is not monotonic in time.** Recall at 14 days before churn (9/10)
+  is higher than at the churn date (8/10), because two accounts recovered some
+  usage shortly before leaving and the recency-weighted windows read that as
+  health returning.
+
+Neither is fixed. They are the output of the harness doing its job, and
+`EVALUATION.md` states what it would take to address them.
 
 ### Keeping the dataset aligned
 
@@ -122,7 +158,7 @@ rather than silently at load time.
 
 ### Restoring the database
 
-Two copies of the same 8,682 rows, both pulled from the live project and both
+Two copies of the same 8,458 rows, both pulled from the live project and both
 validated by round-tripping back to source. Use whichever fits the job.
 
 **`seed.sql` — to actually load it.** Run `schema.sql` then `seed.sql` (the
@@ -403,12 +439,11 @@ Set Node 22 in Vercel's project settings regardless.
 - Phase 5 investigation agent. `investigations` and `outreach` are
   intentionally empty and unqueried; it needs an Anthropic API key and a model
   choice before it can start.
-- Phase 7's evaluation harness. The engine is unit-tested (`npm test`) but has
-  never been graded against `evaluation_cases` as a whole. The `asOf` replay it
-  will use already exists and is tested; what is missing is the scoring run and
-  the precision/recall write-up.
 - Phase 8 deployment. Nothing is on Vercel yet — it needs `SUPABASE_URL`,
   `SUPABASE_SERVICE_ROLE_KEY` and `ASSESS_TOKEN` set in project settings.
+- Phase 7 acts on its own findings. The harness reports that the middle band is
+  under-sensitive (5 of 6 `medium` labels score `low`) and that the score is not
+  monotonic in time, but neither has been fixed — see `EVALUATION.md`.
 - No component or end-to-end tests. `npm test` covers the engine, the two date
   reference points and the display helpers — the logic where a silent
   regression would be invisible. The pages are verified by eye.

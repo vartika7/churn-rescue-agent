@@ -3,7 +3,11 @@ import {
   recentVsPriorTrend,
   sessionsTrend,
 } from "./analysis";
-import { RISK_WEIGHTS, RISK_LEVEL_THRESHOLDS } from "./constants";
+import {
+  RISK_WEIGHTS,
+  RISK_LEVEL_THRESHOLDS,
+  MIN_OBSERVED_DAYS_FOR_CONFIDENCE,
+} from "./constants";
 import { formatDate } from "./format";
 import type { SupportTicket, Subscription, UsageDaily } from "./types";
 
@@ -353,7 +357,8 @@ function assessConfidence(
   signals: readonly RiskSignal[],
 ): Confidence {
   const thin =
-    observedDays < 60 || (tickets.length === 0 && subscriptions.length < 3);
+    observedDays < MIN_OBSERVED_DAYS_FOR_CONFIDENCE ||
+    (tickets.length === 0 && subscriptions.length < 3);
   if (thin) return "low";
 
   const supporting = signals.filter((s) => s.points > 0);
