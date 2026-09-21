@@ -8572,7 +8572,7 @@ WITH checks(assertion, actual, expected) AS (
       (SELECT count(*) FROM public.customers WHERE signup_date >= renewal_date)::text, '0'),
     -- Tenure has to be backed by records: signup_date was once chosen
     -- independently of the usage window and claimed up to 971 days nobody has
-    -- data for. See supabase/18_realign_signup_dates.sql.
+    -- data for. See "Signup dates were fiction" in the README.
     ('signup_date sits 0-3 days before the first usage row',
       (SELECT count(*) FROM public.customers c
          JOIN (SELECT customer_id, MIN(date) AS first_date

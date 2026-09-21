@@ -293,9 +293,10 @@ directly above the usage chart, so C038 read _signed up Oct 6, 2023_ over a
 chart starting Apr 2026. Tenure is also a standard churn feature, which makes a
 fictional tenure column worse than a missing one.
 
-`supabase/18_realign_signup_dates.sql` pulls every `signup_date` to 0-3 days
-before that account's first usage row, with the lead varying per account so the
-join does not look mechanical. Every signup now falls in 2026.
+Every `signup_date` was pulled to 0-3 days before that account's first usage
+row, with the lead varying per account so the join does not look mechanical.
+Every signup now falls in 2026. The seed carries the corrected dates and
+asserts the property on load, so there is no migration to run.
 
 Five churned accounts (C008, C014, C016, C020, C048) had usage genuinely
 starting in late 2025; their pre-2026 usage was trimmed to bring their signups
