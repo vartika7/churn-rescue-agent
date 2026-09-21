@@ -27,7 +27,7 @@ T0025,C029,2026-06-02,"CSV export truncated at 10,000 rows",Any export over 10k 
 T0026,C030,2026-05-25,"CSV export truncated at 10,000 rows",Any export over 10k rows gets cut off partway through with no error message shown.,export,neutral,resolved
 T0027,C032,2026-07-15,"CSV export truncated at 10,000 rows",Any export over 10k rows gets cut off partway through with no error message shown.,export,neutral,resolved
 T0028,C033,2026-04-18,Workflow steps executing out of order,"Steps in our multi-stage workflow are firing out of sequence, causing downstream errors.",workflow,positive,resolved
-T0029,C035,2026-04-28,Workflow steps executing out of order,"Steps in our multi-stage workflow are firing out of sequence, causing downstream errors.",workflow,neutral,resolved
+T0029,C035,2026-04-28,Workflow steps executing out of order,"Steps in our multi-stage workflow are firing out of sequence, causing downstream errors.",workflow,negative,escalated
 T0030,C036,2026-07-15,Saved filters disappearing,Filters we save on the dashboard are gone the next time we log in.,feature,neutral,resolved
 T0031,C038,2026-07-29,Custom field values not saving,Values we enter into custom fields revert back after a page refresh.,feature,neutral,resolved
 T0032,C039,2026-05-07,Scheduled export stopped arriving,Our weekly scheduled export just stopped showing up in the destination folder a few weeks ago.,export,positive,resolved

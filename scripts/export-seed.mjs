@@ -278,6 +278,24 @@ WITH checks(assertion, actual, expected) AS (
         WHERE o.outcome <> 'retained' AND c.renewal_date <> o.outcome_date)::text, '0'),
     ('signup_date before renewal_date',
       (SELECT count(*) FROM public.customers WHERE signup_date >= renewal_date)::text, '0'),
+    -- Tenure has to be backed by records: signup_date was once chosen
+    -- independently of the usage window and claimed up to 971 days nobody has
+    -- data for. See "Signup dates were fiction" in the README.
+    ('signup_date sits 0-3 days before the first usage row',
+      (SELECT count(*) FROM public.customers c
+         JOIN (SELECT customer_id, MIN(date) AS first_date
+                 FROM public.usage_daily GROUP BY customer_id) f USING (customer_id)
+        WHERE c.signup_date > f.first_date
+           OR f.first_date - c.signup_date > 3)::text, '0'),
+    ('no charge predates its account''s first usage',
+      (SELECT count(*) FROM public.subscriptions s
+         JOIN (SELECT customer_id, MIN(date) AS first_date
+                 FROM public.usage_daily GROUP BY customer_id) f USING (customer_id)
+        WHERE s.date < f.first_date)::text, '0'),
+    ('exactly one new charge per customer',
+      (SELECT count(*) FROM (
+         SELECT customer_id FROM public.subscriptions WHERE change_type = 'new'
+          GROUP BY customer_id HAVING count(*) <> 1) x)::text, '0'),
     ('no active account bills past its renewal',
       (SELECT count(*) FROM (
          SELECT c.customer_id

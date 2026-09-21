@@ -144,7 +144,7 @@ generate `risk_assessments` for active customers only; churned data belongs to
 the Phase 7 evaluation harness.
 
 **Reads are paginated.** PostgREST caps a response at 1000 rows. `usage_daily`
-holds 8,200, so a plain `.select()` silently returns the first 1000 and drops
+holds 7,980, so a plain `.select()` silently returns the first 1000 and drops
 most customers off the dashboard. Use `selectAll` from `lib/supabase.ts`, and
 give it an ordering that is a _total_ order or rows can repeat across page
 boundaries.
@@ -206,27 +206,28 @@ What is worth writing down is the part the data does not explain on its own:
 the column vocabularies the heuristics in `lib/analysis.ts` match against, and
 the four places where the data shaped the code.
 
-| Column                                     | Values                                                          |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `customer_outcomes.outcome`                | `retained` 40, `churned` 10                                     |
-| `evaluation_cases.expected_recommendation` | `no_action_needed` 35, `intervene` 9, `monitor` 6               |
-| `evaluation_cases.expected_risk_level`     | `low` 35, `high` 9, `medium` 6                                  |
-| `support_tickets.resolution_status`        | `resolved` 19, `unresolved` 14, `escalated` 10                  |
-| `support_tickets.sentiment`                | `negative` 26, `neutral` 11, `positive` 6                       |
-| `subscriptions.payment_status`             | `paid` 292, `past_due` 1                                        |
-| `subscriptions.change_type`                | `renewal` 238, `new` 50, `payment_failed` 1                     |
+| Column                                     | Values                                             |
+| ------------------------------------------ | -------------------------------------------------- |
+| `customer_outcomes.outcome`                | `retained` 40, `churned` 10                        |
+| `evaluation_cases.expected_recommendation` | `no_action_needed` 33, `intervene` 11, `monitor` 6 |
+| `evaluation_cases.expected_risk_level`     | `low` 33, `high` 11, `medium` 6                    |
+| `support_tickets.resolution_status`        | `resolved` 18, `unresolved` 14, `escalated` 11     |
+| `support_tickets.sentiment`                | `negative` 27, `neutral` 10, `positive` 6          |
+| `subscriptions.payment_status`             | `paid` 283, `past_due` 2                           |
+| `subscriptions.change_type`                | `renewal` 234, `new` 50, `payment_failed` 1        |
 
 - The stored recommendation is `no_action_needed`, not the `no_action` the brief
   documented. `parseRecommendation` accepts both; drop the alias and 35
   accounts silently become "No case data".
-- `change_type` is literally `renewal` on 242 rows. It is **not** rendered,
+- `change_type` is literally `renewal` on 234 rows. It is **not** rendered,
   because these are billing charges — see `chargeNote` in the customer page.
 - `change_type` also carries the value `payment_failed`, so the billing evidence
-  rule checks **both** `payment_status` and `change_type`. The one bad charge in
-  the dataset (C014, 2026-05-09) happens to flag in both columns.
+  rule checks **both** `payment_status` and `change_type`, and it has to: of the
+  two bad charges, C014's flags in both columns while C038's is `past_due` with
+  `change_type = 'renewal'`. Checking `change_type` alone would miss it.
 - C042 (Granite Group) was converted into a recently-signed account — 38 days
   of usage, two charges, no tickets — because the engine's `low` confidence
-  branch was unreachable otherwise: every other account has 112+ days of
+  branch was unreachable otherwise: every other account has 92+ days of
   history, so the sparse-data check never fired. It is the one case where the
   engine declines to judge, which is the answer you want for an account nobody
   has watched long enough. Converting an existing customer rather than adding a
@@ -244,22 +245,80 @@ the four places where the data shaped the code.
   accounts keep theirs, where the unresolved lockout is part of the churn
   story. `seed.sql` asserts it. `resolution_status` no longer contains
   `in_progress` at all — `OPEN_TICKET_STATUSES` still matches it defensively.
-- With one `past_due` charge in 293, the billing-supporting branch almost never
-  fires, and 22 of 50 customers have no tickets at all. Both are exercised by
-  fixtures rather than by this data.
+- C035 (Pacific Solutions, Enterprise $1,765) and C038 (Orbit Partners, Pro
+  $605) were converted into **active accounts in genuine decline**, because the
+  generated data had no such cohort: every account was either healthy and
+  retained or declining and already churned, so no active account could score
+  `high` and the worklist the tool exists to produce was structurally empty.
+  C035 lost engagement outright — 45 days sliding to a quarter of its baseline,
+  13 silent days in the last 30, plus ticket T0029 escalated. C038 slid more
+  gently over 30 days and stopped paying, so the two are not the same case
+  twice. As with C042, existing rows were edited rather than customers added:
+  the 50 customers, the 40/10 split and the $22,920 total all still hold, and
+  no usage row was added or removed (the later signup realignment is what moved
+  that count).
+  They score **70** and **61**, deliberately short of the churned cohort's
+  81-97 — the story is an account caught while it can still be saved, and if
+  the two populations overlapped the score would not carry that meaning.
+- 22 of 50 customers have no tickets at all, which is the branch this data
+  exercises least.
 
-### Consequence: no active account is flagged "Intervene"
+### Consequence: the "Intervene" card was structurally empty
 
-All 9 `intervene` labels belong to churned accounts, so once the active/lost
-split is applied the active summary reads **Intervene 0 / MRR at risk $0**, with
-6 Monitor and 34 No action.
+Originally all 9 `intervene` labels belonged to churned accounts, so once the
+active/lost split was applied the active summary read **Intervene 0 / MRR at
+risk $0**, with 6 Monitor and 34 No action.
 
-This is correct, not a bug: `expected_recommendation` encodes the outcome, since
-`intervene` is the right grading precisely for accounts that went on to leave.
-The dashboard shows an explanatory note rather than letting the empty card look
-broken. It also means the placeholder data carries **no forward-looking signal
-for active accounts** — which is exactly the gap the Phase 4 risk engine exists
-to fill, and worth remembering before reading anything into that zero.
+That was not a bug in the split: `expected_recommendation` encodes the outcome,
+and `intervene` is the right grading precisely for accounts that went on to
+leave. But it did mean the placeholder gradings carried **no forward-looking
+signal for active accounts** — a churn tool whose worklist can only ever be
+empty. The C035/C038 conversion above is what closed the gap; the active
+summary now reads **Intervene 2 / MRR at risk $2,370**, with 6 Monitor and 32
+No action, and the risk engine independently scores both `high`.
+
+Two things are worth keeping straight here. The gradings in `evaluation_cases`
+are ground truth for the Phase 7 harness, not engine output — they are labels
+someone wrote down, and the dashboard marks them as placeholder. And the engine
+reaching the same verdict is not confirmation that it is right: the data was
+shaped to contain a case of this kind, so the agreement shows the signal is
+detectable, not that the thresholds generalise.
+
+### Signup dates were fiction, and are now tied to the data
+
+The generator chose `signup_date` independently of the usage window, so 48 of
+50 accounts claimed tenure they had no records for — C017 by 971 days, C038 by
+934, and 34 accounts by over a year. The customer page renders "Signed up"
+directly above the usage chart, so C038 read _signed up Oct 6, 2023_ over a
+chart starting Apr 2026. Tenure is also a standard churn feature, which makes a
+fictional tenure column worse than a missing one.
+
+Every `signup_date` was pulled to 0-3 days before that account's first usage
+row, with the lead varying per account so the join does not look mechanical.
+Every signup now falls in 2026. The seed carries the corrected dates and
+asserts the property on load, so there is no migration to run.
+
+Five churned accounts (C008, C014, C016, C020, C048) had usage genuinely
+starting in late 2025; their pre-2026 usage was trimmed to bring their signups
+into 2026, at staggered cutoffs rather than a shared Jan 1, since five accounts
+sharing one signup date would read as generated. `usage_daily` went 8,200 →
+7,980 and `subscriptions` 289 → 285; each trimmed account's opening `new` charge
+was re-dated rather than deleted, so every customer still has exactly one.
+
+**The cost is worth knowing before Phase 7.** Those five are churned accounts,
+which are the evaluation set, and trimming shortened exactly the histories that
+evidence rests on — C016 from 170 days to 93, C048 from 112 to 92. Recall is
+unchanged (8/10 flagged at churn, no account changing level), but "how early was
+this detectable?" is answered by replaying the engine at 120/90/60/30 days
+before churn, and two accounts no longer have the depth for the longest horizon.
+The alternative was to let those five keep late-2025 signups, which the data
+would have supported. Forcing 2026 was a deliberate choice, not a constraint the
+incoherence required.
+
+A related consequence: with every signup in 2026 and all usage ending
+2026-09-20, tenure is now close to collinear with "when this account's records
+start", so it carries little independent signal. Worth remembering before
+treating tenure as a feature.
 
 ### Renewal dates, and this dataset's shelf life
 
@@ -278,12 +337,12 @@ The side effect is that every active renewal landed in one November band,
 because billing is roughly monthly and usage data ends 2026-10-31. Countdowns
 read the real clock, so the buckets move:
 
-| as of      | overdue | amber ≤14d | 15-45d | 46d+ | range     |
-| ---------- | ------- | ---------- | ------ | ---- | --------- |
-| 2026-09-18 | 0       | 0          | 4      | 36   | 44-73d    |
-| +30d       | 0       | 4          | 36     | 0    | 14-43d    |
-| +60d       | 20      | 20         | 0      | 0    | -16-13d   |
-| +90d       | 40      | 0          | 0      | 0    | -46--17d  |
+| as of      | overdue | amber ≤14d | 15-45d | 46d+ | range    |
+| ---------- | ------- | ---------- | ------ | ---- | -------- |
+| 2026-09-18 | 0       | 0          | 4      | 36   | 44-73d   |
+| +30d       | 0       | 4          | 36     | 0    | 14-43d   |
+| +60d       | 20      | 20         | 0      | 0    | -16-13d  |
+| +90d       | 40      | 0          | 0      | 0    | -46--17d |
 
 **So the data has a shelf life.** Nothing is amber today, and by about 90 days
 out every active account reads overdue. Before demoing on a given date, check
