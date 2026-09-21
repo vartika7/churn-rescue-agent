@@ -26,11 +26,12 @@ If either is missing the pages render a setup message instead of crashing.
 
 ## Scripts
 
-| Command             | Purpose          |
-| ------------------- | ---------------- |
-| `npm run dev`       | Local dev server |
-| `npm run build`     | Production build |
-| `npm run typecheck` | `tsc --noEmit`   |
+| Command             | Purpose                                |
+| ------------------- | -------------------------------------- |
+| `npm run dev`       | Local dev server                       |
+| `npm run build`     | Production build                       |
+| `npm run typecheck` | `tsc --noEmit`                         |
+| `npm test`          | Engine unit tests (no database needed) |
 
 ## Structure
 
@@ -66,6 +67,30 @@ supabase/
 scripts/
   export-seed.mjs          Re-export seed.sql + CSVs from the live database
 ```
+
+### Tests
+
+`npm test` runs `node:test` through `tsx`, 68 cases over the risk engine, the
+two date reference points and the display helpers. No database, no network, no
+seed file: every fixture is built in `test/helpers.ts`.
+
+That is deliberate. The signal bands are step functions, so a test asserting
+against real rows only pins whatever the dataset happens to sit on today — and
+this dataset has been reshaped twice. The fixtures construct the exact series
+needed to land on each boundary, so `-40%` versus `-39%` and 6 silent days
+versus 5 are checked directly.
+
+What the suite is really guarding is the four bugs that already happened once:
+a whole-history trend claimed from 38 days of data, an amber renewal badge on
+every overdue account, a present-tense "High risk" on a company that left in
+April, and a reason string that wrapped to two lines. Each has a named
+regression test.
+
+The suite was checked by mutation rather than by passing: inverting the high
+threshold, removing the 90-day history gate, shifting the silence band,
+removing the escalated cap, folding `overdue` back into `soon`, removing the
+score cap and making the churned label present-tense each produce failures.
+A suite that cannot fail is not evidence of anything.
 
 ### Keeping the dataset aligned
 
@@ -375,7 +400,20 @@ Set Node 22 in Vercel's project settings regardless.
 
 ## Not yet built
 
-- Phase 4 risk engine and Phase 5 investigation agent. `risk_assessments`,
-  `investigations` and `outreach` are intentionally empty and unqueried.
-- **Open decision before Phase 4:** whether the deterministic risk scoring lives
-  in SQL (a Supabase view/function) or in the app layer as TypeScript.
+- Phase 5 investigation agent. `investigations` and `outreach` are
+  intentionally empty and unqueried; it needs an Anthropic API key and a model
+  choice before it can start.
+- Phase 7's evaluation harness. The engine is unit-tested (`npm test`) but has
+  never been graded against `evaluation_cases` as a whole. The `asOf` replay it
+  will use already exists and is tested; what is missing is the scoring run and
+  the precision/recall write-up.
+- Phase 8 deployment. Nothing is on Vercel yet — it needs `SUPABASE_URL`,
+  `SUPABASE_SERVICE_ROLE_KEY` and `ASSESS_TOKEN` set in project settings.
+- No component or end-to-end tests. `npm test` covers the engine, the two date
+  reference points and the display helpers — the logic where a silent
+  regression would be invisible. The pages are verified by eye.
+
+Resolved earlier: the deterministic scoring lives in the app layer as
+TypeScript, not as a SQL view. It has to run identically over live rows and
+over synthetic fixtures with no database at all, which is what makes both the
+unit tests and the Phase 7 replay possible.

@@ -109,7 +109,7 @@ export function recentVsPriorTrend(
  * Compares average sessions in the earliest third of a run of days against the
  * most recent third. `sessions` must already be in chronological order.
  *
- * Thirds rather than fixed windows because the observation window runs 112-196
+ * Thirds rather than fixed windows because the observation window runs 92-196
  * days and is truncated at `outcome_date` for churned accounts, so a fixed
  * "first 30 vs last 30" would weight short and long histories differently.
  */
