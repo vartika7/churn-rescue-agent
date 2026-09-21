@@ -56,7 +56,12 @@ export interface RiskAssessment {
 }
 
 export interface ScoreInput {
-  usage: readonly UsageDaily[];
+  /**
+   * Only `date` and `sessions` are read, and the type says so: the dashboard
+   * scores all 50 accounts in one render and has no reason to pull logins,
+   * key_actions and feature_usage for 8,000+ rows to do it.
+   */
+  usage: readonly Pick<UsageDaily, "date" | "sessions">[];
   tickets: readonly SupportTicket[];
   subscriptions: readonly Subscription[];
   /**

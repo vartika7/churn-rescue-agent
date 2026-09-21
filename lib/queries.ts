@@ -169,3 +169,19 @@ export async function fetchCustomerSubscriptions(
     { eq: { customer_id: customerId } },
   );
 }
+
+/** Every ticket, for scoring the whole book in one page render. 43 rows. */
+export async function fetchAllTickets(): Promise<SupportTicket[]> {
+  return selectAll("support_tickets", TICKET_COLUMNS, [
+    { column: "customer_id" },
+    { column: "date" },
+  ]);
+}
+
+/** Every charge, for scoring the whole book in one page render. ~293 rows. */
+export async function fetchAllSubscriptions(): Promise<Subscription[]> {
+  return selectAll("subscriptions", SUBSCRIPTION_COLUMNS, [
+    { column: "customer_id" },
+    { column: "date" },
+  ]);
+}

@@ -15,23 +15,25 @@ import {
 } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
+  parseRecommendation,
+  retrospectiveBadge,
+} from "@/lib/placeholder-risk";
+import {
+  fetchAllSessions,
+  fetchAllSubscriptions,
+  fetchAllTickets,
+  fetchCustomerOutcomes,
+  fetchCustomers,
+  fetchPlaceholderRiskCases,
+} from "@/lib/queries";
+import { scoreCustomer, type RiskLevel } from "@/lib/risk-engine";
+import {
   getLatestRecordedDate,
   getRealToday,
   relativeDayLabel,
   renewalCountdown,
   toISODate,
 } from "@/lib/time";
-import {
-  parseRecommendation,
-  retrospectiveBadge,
-} from "@/lib/placeholder-risk";
-import {
-  fetchAllSessions,
-  fetchCustomerOutcomes,
-  fetchCustomers,
-  fetchPlaceholderRiskCases,
-} from "@/lib/queries";
-import type { Recommendation } from "@/lib/types";
 
 /**
  * Without this, the Server Component's data fetch is cached at build time and a
@@ -48,32 +50,37 @@ export default async function DashboardPage({
   const { view } = await searchParams;
   const variant: TableVariant = view === "lost" ? "lost" : "active";
 
-  let customers, sessions, riskCases, outcomes;
+  let customers, sessions, tickets, subscriptions, riskCases, outcomes;
 
   try {
-    [customers, sessions, riskCases, outcomes] = await Promise.all([
-      fetchCustomers(),
-      fetchAllSessions(),
-      fetchPlaceholderRiskCases(),
-      fetchCustomerOutcomes(),
-    ]);
+    [customers, sessions, tickets, subscriptions, riskCases, outcomes] =
+      await Promise.all([
+        fetchCustomers(),
+        fetchAllSessions(),
+        fetchAllTickets(),
+        fetchAllSubscriptions(),
+        fetchPlaceholderRiskCases(),
+        fetchCustomerOutcomes(),
+      ]);
   } catch (error) {
     return <SetupError error={error} />;
   }
 
-  // Ordered by (customer_id, date) in the query, so each array is chronological.
-  // Dates are kept alongside sessions so each customer's usage window can be
-  // anchored to its own latest recorded date.
-  const usageByCustomer = new Map<
-    string,
-    { date: string; sessions: number }[]
-  >();
-  for (const row of sessions) {
-    const entry = { date: row.date, sessions: row.sessions };
-    const list = usageByCustomer.get(row.customer_id);
-    if (list) list.push(entry);
-    else usageByCustomer.set(row.customer_id, [entry]);
-  }
+  const groupBy = <T extends { customer_id: string }>(rows: T[]) => {
+    const map = new Map<string, T[]>();
+    for (const row of rows) {
+      const list = map.get(row.customer_id);
+      if (list) list.push(row);
+      else map.set(row.customer_id, [row]);
+    }
+    return map;
+  };
+
+  // Ordered by (customer_id, date) in the queries, so each array is already
+  // chronological — which is what the analysis primitives require.
+  const usageBy = groupBy(sessions);
+  const ticketsBy = groupBy(tickets);
+  const subsBy = groupBy(subscriptions);
 
   const caseByCustomer = new Map(riskCases.map((c) => [c.customer_id, c]));
   const outcomeByCustomer = new Map(outcomes.map((o) => [o.customer_id, o]));
@@ -88,23 +95,13 @@ export default async function DashboardPage({
   for (const customer of customers) {
     const outcome = outcomeByCustomer.get(customer.customer_id);
     const riskCase = caseByCustomer.get(customer.customer_id);
-    const recommendation = parseRecommendation(
-      riskCase?.expected_recommendation,
-    );
+    const history = usageBy.get(customer.customer_id) ?? [];
 
     // Usage window: last 90 days ON RECORD for this customer, anchored to its
-    // own latest recorded date rather than real today. Churned accounts' rows
-    // stop at their outcome_date, so this gives each cohort a comparable final
-    // stretch instead of an empty window.
-    const history = usageByCustomer.get(customer.customer_id) ?? [];
+    // own latest recorded date rather than real today.
     const windowRows = history.slice(-SPARKLINE_DAYS);
     const sparkline = windowRows.map((r) => r.sessions);
     const recordedThrough = getLatestRecordedDate(history);
-
-    // Two different questions, deliberately kept apart. The trend answers "is
-    // this falling off?" over adjacent 30-day windows; active days answers "is
-    // anyone actually showing up?", which an average hides — 30 sessions spread
-    // over 30 days and crammed into 3 average the same.
     const trend = recentVsPriorTrend(sparkline, TREND_WINDOW_DAYS);
     const activity = activeDaysComparison(windowRows, ACTIVITY_WINDOW_DAYS);
 
@@ -128,7 +125,6 @@ export default async function DashboardPage({
       activityWindowDays: activity.days,
       activeDaysPrior: activity.priorActive,
       activeDaysDelta: activity.delta,
-      recommendation,
       renewalDateLabel: formatDate(customer.renewal_date),
       renewalDays: countdown.days,
       renewalCountdown: countdown.label,
@@ -138,14 +134,41 @@ export default async function DashboardPage({
     const isRetained = (outcome?.outcome ?? "").toLowerCase() === "retained";
 
     if (isRetained) {
-      activeRows.push({ ...base, lost: null });
+      // Scored live rather than read from `risk_assessments`: that table is
+      // only populated when POST /api/assess runs, and a dashboard that shows
+      // nothing until a job has been triggered is a worse dashboard. The
+      // stored rows exist to give Phases 6 and 7 a history to work against.
+      const assessment = scoreCustomer({
+        usage: history,
+        tickets: ticketsBy.get(customer.customer_id) ?? [],
+        subscriptions: subsBy.get(customer.customer_id) ?? [],
+      });
+
+      activeRows.push({
+        ...base,
+        risk: {
+          level: assessment.riskLevel,
+          score: assessment.score,
+          confidence: assessment.confidence,
+          reason: assessment.reason,
+          firingSignals: assessment.signals.filter((s) => s.points > 0).length,
+        },
+        lost: null,
+      });
     } else {
+      // Churned accounts are never scored — see lib/risk-store.ts. They keep
+      // the retrospective grading from `evaluation_cases`.
+      const recommendation = parseRecommendation(
+        riskCase?.expected_recommendation,
+      );
       const badge = retrospectiveBadge(recommendation, riskCase?.case_type);
       const churn = outcome
         ? relativeDayLabel(outcome.outcome_date, realToday)
         : null;
+
       lostRows.push({
         ...base,
+        risk: null,
         lost: {
           badgeLabel: badge.label,
           badgeClass: badge.className,
@@ -154,34 +177,26 @@ export default async function DashboardPage({
             ? formatDate(outcome.outcome_date)
             : "unknown",
           churnDays: churn?.days ?? 0,
-          churnCountdown: churn?.label ?? "",
           reason: outcome?.reason ?? "",
         },
       });
     }
   }
 
-  // Summary is scoped to the active book. Including churned accounts would
-  // inflate "MRR at risk" with revenue that is already gone.
-  const counts: Record<Recommendation | "none", number> = {
-    intervene: 0,
-    monitor: 0,
-    no_action: 0,
-    none: 0,
-  };
+  const counts: Record<RiskLevel, number> = { high: 0, medium: 0, low: 0 };
   let mrrAtRisk = 0;
   let activeMrr = 0;
 
   for (const row of activeRows) {
     activeMrr += row.mrr;
-    counts[row.recommendation ?? "none"] += 1;
-    if (row.recommendation === "intervene") mrrAtRisk += row.mrr;
+    if (!row.risk) continue;
+    counts[row.risk.level] += 1;
+    // High and medium both count: medium is "worth a call", which is still
+    // revenue you would act to keep.
+    if (row.risk.level !== "low") mrrAtRisk += row.mrr;
   }
 
   const lostMrr = lostRows.reduce((sum, row) => sum + row.mrr, 0);
-  const lostInterveneCount = lostRows.filter(
-    (row) => row.recommendation === "intervene",
-  ).length;
   const rows = variant === "active" ? activeRows : lostRows;
 
   return (
@@ -189,9 +204,6 @@ export default async function DashboardPage({
       <div className="page-head">
         <div>
           <h1 className="page-title">Portfolio risk overview</h1>
-          {/* One line on purpose. The date-anchor explanation this used to
-              carry now lives in the per-column tooltips, where it is read at
-              the moment it matters rather than skimmed past up here. */}
           <p className="page-desc">
             {activeRows.length} active accounts, {lostRows.length} lost · live
             from Supabase · today is{" "}
@@ -200,27 +212,21 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      <PrototypeNote />
-
       <div className="stat-grid">
         <div className="stat stat-intervene">
-          <div className="stat-label">Intervene</div>
-          <div className="stat-value mono">{counts.intervene}</div>
-          <div className="stat-foot">active accounts flagged for outreach</div>
+          <div className="stat-label">High risk</div>
+          <div className="stat-value mono">{counts.high}</div>
+          <div className="stat-foot">active accounts, score 50+</div>
         </div>
         <div className="stat stat-monitor">
-          <div className="stat-label">Monitor</div>
-          <div className="stat-value mono">{counts.monitor}</div>
-          <div className="stat-foot">watch, no action yet</div>
+          <div className="stat-label">Medium risk</div>
+          <div className="stat-value mono">{counts.medium}</div>
+          <div className="stat-foot">active accounts, score 25-49</div>
         </div>
         <div className="stat stat-healthy">
-          <div className="stat-label">No action</div>
-          <div className="stat-value mono">{counts.no_action}</div>
-          <div className="stat-foot">
-            {counts.none > 0
-              ? `${counts.none} without case data`
-              : "healthy active accounts"}
-          </div>
+          <div className="stat-label">Low risk</div>
+          <div className="stat-value mono">{counts.low}</div>
+          <div className="stat-foot">active accounts, no or minor signals</div>
         </div>
         <div className="stat">
           <div className="stat-label">MRR at risk</div>
@@ -245,26 +251,6 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {counts.intervene === 0 && (
-        <div className="notice notice-info" role="note">
-          <span className="notice-icon" aria-hidden="true">
-            ⓘ
-          </span>
-          <div>
-            <strong>
-              No active account is flagged &ldquo;Intervene&rdquo;.
-            </strong>{" "}
-            That is a property of the placeholder data, not a bug: all{" "}
-            {lostInterveneCount} <code>intervene</code> labels in{" "}
-            <code>evaluation_cases</code> belong to accounts that have already
-            churned, because the label grades whether intervening{" "}
-            <em>would have been</em> right before they left. Producing a
-            forward-looking risk signal for active accounts is precisely what
-            the Phase 4 risk engine is for.
-          </div>
-        </div>
-      )}
-
       <section className="section">
         <div className="tabs" role="tablist">
           <Link
@@ -287,28 +273,32 @@ export default async function DashboardPage({
         </div>
 
         {variant === "lost" ? (
-          <div className="notice notice-info" role="note">
-            <span className="notice-icon" aria-hidden="true">
-              ⓘ
-            </span>
-            <div>
-              <strong>Retrospective view — not a worklist.</strong> These
-              accounts have already left, so nothing here is actionable today; a
-              win-back motion is a separate workflow. Gradings answer
-              &ldquo;would intervening have been right, on the data available
-              before they left?&rdquo; Renewal dates are omitted because a
-              churned account&apos;s <code>renewal_date</code> is its churn
-              date; the churn column below already carries it.
+          <>
+            <PrototypeNote>
+              Lost accounts are <strong>not</strong> scored by the risk engine —
+              there is no next action for an account that has gone. These
+              gradings come from <code>evaluation_cases</code> ground truth and
+              answer &ldquo;would intervening have been right, on the data
+              available before they left?&rdquo;
+            </PrototypeNote>
+            <div className="notice notice-info" role="note">
+              <span className="notice-icon" aria-hidden="true">
+                ⓘ
+              </span>
+              <div>
+                <strong>Retrospective view — not a worklist.</strong> Renewal
+                dates are omitted because a churned account&apos;s{" "}
+                <code>renewal_date</code> is its churn date; the churn column
+                below already carries it.
+              </div>
             </div>
-          </div>
+          </>
         ) : (
           <div className="section-head">
             <h2 className="section-title">Active accounts</h2>
             <span className="section-note">
-              Sparkline shows daily sessions over each account&apos;s final{" "}
-              {SPARKLINE_DAYS} days on record; the figure beside it is the
-              change from the first third of that window to the last. Click any
-              row for detail.
+              Risk scored live by the Phase 4 engine from usage, support and
+              billing. Click any row for the signals behind a score.
             </span>
           </div>
         )}
