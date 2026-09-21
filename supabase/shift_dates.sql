@@ -100,7 +100,7 @@ WITH checks(assertion, actual, expected) AS (
       (SELECT count(*) FROM public.customer_outcomes
         WHERE outcome <> 'retained' AND outcome_date > CURRENT_DATE)::text, '0'),
     ('row counts unchanged by the shift',
-      (SELECT count(*) FROM public.usage_daily)::text, '8200')
+      (SELECT count(*) FROM public.usage_daily)::text, '7980')
 )
 SELECT assertion, expected, actual FROM checks WHERE actual IS DISTINCT FROM expected;
 

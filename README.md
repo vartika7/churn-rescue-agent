@@ -144,7 +144,7 @@ generate `risk_assessments` for active customers only; churned data belongs to
 the Phase 7 evaluation harness.
 
 **Reads are paginated.** PostgREST caps a response at 1000 rows. `usage_daily`
-holds 8,200, so a plain `.select()` silently returns the first 1000 and drops
+holds 7,980, so a plain `.select()` silently returns the first 1000 and drops
 most customers off the dashboard. Use `selectAll` from `lib/supabase.ts`, and
 give it an ordering that is a _total_ order or rows can repeat across page
 boundaries.
@@ -213,13 +213,13 @@ the four places where the data shaped the code.
 | `evaluation_cases.expected_risk_level`     | `low` 33, `high` 11, `medium` 6                    |
 | `support_tickets.resolution_status`        | `resolved` 18, `unresolved` 14, `escalated` 11     |
 | `support_tickets.sentiment`                | `negative` 27, `neutral` 10, `positive` 6          |
-| `subscriptions.payment_status`             | `paid` 287, `past_due` 2                           |
-| `subscriptions.change_type`                | `renewal` 238, `new` 50, `payment_failed` 1        |
+| `subscriptions.payment_status`             | `paid` 283, `past_due` 2                           |
+| `subscriptions.change_type`                | `renewal` 234, `new` 50, `payment_failed` 1        |
 
 - The stored recommendation is `no_action_needed`, not the `no_action` the brief
   documented. `parseRecommendation` accepts both; drop the alias and 35
   accounts silently become "No case data".
-- `change_type` is literally `renewal` on 238 rows. It is **not** rendered,
+- `change_type` is literally `renewal` on 234 rows. It is **not** rendered,
   because these are billing charges — see `chargeNote` in the customer page.
 - `change_type` also carries the value `payment_failed`, so the billing evidence
   rule checks **both** `payment_status` and `change_type`, and it has to: of the
@@ -227,7 +227,7 @@ the four places where the data shaped the code.
   `change_type = 'renewal'`. Checking `change_type` alone would miss it.
 - C042 (Granite Group) was converted into a recently-signed account — 38 days
   of usage, two charges, no tickets — because the engine's `low` confidence
-  branch was unreachable otherwise: every other account has 112+ days of
+  branch was unreachable otherwise: every other account has 92+ days of
   history, so the sparse-data check never fired. It is the one case where the
   engine declines to judge, which is the answer you want for an account nobody
   has watched long enough. Converting an existing customer rather than adding a
@@ -254,7 +254,9 @@ the four places where the data shaped the code.
   13 silent days in the last 30, plus ticket T0029 escalated. C038 slid more
   gently over 30 days and stopped paying, so the two are not the same case
   twice. As with C042, existing rows were edited rather than customers added:
-  the 50/40-10 split, the 8,200 usage rows and the $22,920 total all still hold.
+  the 50 customers, the 40/10 split and the $22,920 total all still hold, and
+  no usage row was added or removed (the later signup realignment is what moved
+  that count).
   They score **70** and **61**, deliberately short of the churned cohort's
   81-97 — the story is an account caught while it can still be saved, and if
   the two populations overlapped the score would not carry that meaning.
@@ -281,6 +283,41 @@ someone wrote down, and the dashboard marks them as placeholder. And the engine
 reaching the same verdict is not confirmation that it is right: the data was
 shaped to contain a case of this kind, so the agreement shows the signal is
 detectable, not that the thresholds generalise.
+
+### Signup dates were fiction, and are now tied to the data
+
+The generator chose `signup_date` independently of the usage window, so 48 of
+50 accounts claimed tenure they had no records for — C017 by 971 days, C038 by
+934, and 34 accounts by over a year. The customer page renders "Signed up"
+directly above the usage chart, so C038 read _signed up Oct 6, 2023_ over a
+chart starting Apr 2026. Tenure is also a standard churn feature, which makes a
+fictional tenure column worse than a missing one.
+
+`supabase/18_realign_signup_dates.sql` pulls every `signup_date` to 0-3 days
+before that account's first usage row, with the lead varying per account so the
+join does not look mechanical. Every signup now falls in 2026.
+
+Five churned accounts (C008, C014, C016, C020, C048) had usage genuinely
+starting in late 2025; their pre-2026 usage was trimmed to bring their signups
+into 2026, at staggered cutoffs rather than a shared Jan 1, since five accounts
+sharing one signup date would read as generated. `usage_daily` went 8,200 →
+7,980 and `subscriptions` 289 → 285; each trimmed account's opening `new` charge
+was re-dated rather than deleted, so every customer still has exactly one.
+
+**The cost is worth knowing before Phase 7.** Those five are churned accounts,
+which are the evaluation set, and trimming shortened exactly the histories that
+evidence rests on — C016 from 170 days to 93, C048 from 112 to 92. Recall is
+unchanged (8/10 flagged at churn, no account changing level), but "how early was
+this detectable?" is answered by replaying the engine at 120/90/60/30 days
+before churn, and two accounts no longer have the depth for the longest horizon.
+The alternative was to let those five keep late-2025 signups, which the data
+would have supported. Forcing 2026 was a deliberate choice, not a constraint the
+incoherence required.
+
+A related consequence: with every signup in 2026 and all usage ending
+2026-09-20, tenure is now close to collinear with "when this account's records
+start", so it carries little independent signal. Worth remembering before
+treating tenure as a feature.
 
 ### Renewal dates, and this dataset's shelf life
 
