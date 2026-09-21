@@ -5,8 +5,14 @@ import { EvidencePanel } from "@/components/EvidencePanel";
 import { PrototypeNote } from "@/components/PrototypeNote";
 import { SetupError } from "@/components/SetupError";
 import { UsageChart } from "@/components/UsageChart";
-import { buildEvidence } from "@/lib/analysis";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { scoreCustomer } from "@/lib/risk-engine";
+import {
+  confidenceLabel,
+  riskBadgeClass,
+  riskLabel,
+  riskLabelAtChurn,
+} from "@/lib/risk-display";
 import { getLatestRecordedDate, renewalCountdown } from "@/lib/time";
 import {
   recommendationBadgeClass,
@@ -58,7 +64,6 @@ export default async function CustomerPage({
   // different reference point entirely — see lib/time.ts.
   const countdown = renewalCountdown(customer.renewal_date);
   const recordedThrough = getLatestRecordedDate(usage);
-  const evidence = buildEvidence(usage, tickets, subscriptions);
 
   // A churned account gets past-tense framing throughout: no present-tense
   // "Intervene" badge, and no renewal countdown — its renewal_date equals its
@@ -68,6 +73,17 @@ export default async function CustomerPage({
   const retrospective = isChurned
     ? retrospectiveBadge(recommendation, riskCase?.case_type)
     : null;
+
+  // Churned accounts are not scored: an assessment is a statement about what to
+  // do next, and there is nothing to do next. Their signals are shown replayed
+  // as of the churn date instead, so the panel answers "what was visible before
+  // they left?" rather than scoring a dead account as though it were live.
+  const assessment = scoreCustomer({
+    usage,
+    tickets,
+    subscriptions,
+    asOf: isChurned ? outcome?.outcome_date : undefined,
+  });
 
   return (
     <main className="shell">
@@ -86,9 +102,17 @@ export default async function CustomerPage({
         {retrospective ? (
           <span className={retrospective.className}>{retrospective.label}</span>
         ) : (
-          <span className={recommendationBadgeClass(recommendation)}>
-            {recommendationLabel(recommendation)}
-          </span>
+          <div className="risk-header">
+            <span className={riskBadgeClass(assessment.riskLevel)}>
+              {riskLabel(assessment.riskLevel)}
+            </span>
+            <span className="risk-header-score mono">
+              {assessment.score}/100
+            </span>
+            <span className="risk-header-conf">
+              {confidenceLabel(assessment.confidence)}
+            </span>
+          </div>
         )}
       </div>
 
@@ -162,26 +186,53 @@ export default async function CustomerPage({
 
       <section className="section">
         <div className="section-head">
-          <h2 className="section-title">Evidence — rule-based, not investigated</h2>
+          <h2 className="section-title">
+            Risk signals — deterministic, not investigated
+          </h2>
           <span className="section-note">
-            Derived on page load from usage, support and billing rows
+            {isChurned
+              ? `Replayed as of ${outcome ? formatDate(outcome.outcome_date) : "the churn date"}`
+              : `Scored on page load · ${assessment.window.observedDays} days observed`}
           </span>
         </div>
+
+        <div className="risk-summary card card-pad">
+          <div className="risk-summary-score">
+            <span className={riskBadgeClass(assessment.riskLevel)}>
+              {isChurned
+                ? riskLabelAtChurn(assessment.riskLevel)
+                : riskLabel(assessment.riskLevel)}
+            </span>
+            <span className="risk-summary-number mono">
+              {assessment.score}
+              <span className="risk-summary-denom">/100</span>
+            </span>
+          </div>
+          <p className="risk-summary-reason">{assessment.reason}</p>
+          <p className="risk-summary-conf">
+            {confidenceLabel(assessment.confidence)} ·{" "}
+            {assessment.window.from && assessment.window.to
+              ? `${formatDate(assessment.window.from)} → ${formatDate(assessment.window.to)}`
+              : "no usage on record"}
+          </p>
+        </div>
+
         <PrototypeNote>
-          <strong>No investigation has run.</strong> The{" "}
+          <strong>No AI investigation has run.</strong> The{" "}
           <code>investigations</code> table is empty and is not queried anywhere
-          in this build. Each item below is computed on page load by a fixed
-          threshold rule in <code>lib/analysis.ts</code> — a sessions decline
-          past a set percentage, a count of zero-session days, an unresolved or
-          escalated ticket, a failed charge. The thresholds are provisional and
-          Phase 5&apos;s investigation agent is expected to replace them.
+          in this build. Every signal below comes from the Phase 4 engine in{" "}
+          <code>lib/risk-engine.ts</code>: fixed thresholds over sessions,
+          silent days, open tickets and failed charges, each contributing a
+          fixed number of points. The same inputs always give the same score —
+          that is what makes it gradeable, and what Phase 5&apos;s investigation
+          agent will sit on top of rather than replace.
           <br />
-          The rules read only usage, support and billing rows — never the
-          outcome — so on a churned account they show what was visible{" "}
-          <em>before</em> it left. The badge above comes from a different
-          source again: <code>evaluation_cases</code>.
+          The engine reads only usage, support and billing, and its signature
+          accepts no outcome, so on a churned account these are the signals that
+          were visible <em>before</em> it left. The retrospective grading above
+          comes from a different source entirely: <code>evaluation_cases</code>.
         </PrototypeNote>
-        <EvidencePanel evidence={evidence} />
+        <EvidencePanel signals={assessment.signals} />
       </section>
 
       <section className="section">

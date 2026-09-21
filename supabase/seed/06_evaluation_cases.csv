@@ -40,7 +40,7 @@ C038,retained,low,no_action_needed,"Healthy, stable usage across the observed pe
 C039,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
 C040,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
 C041,churned,high,intervene,"Sustained, sharp decline in product engagement with no recovery signal",standard_intervene
-C042,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action
+C042,retained,low,no_action_needed,"Recently signed; too little history to establish a trend, and nothing adverse in what is observable",standard_no_action
 C043,retained,low,no_action_needed,"Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal",false_positive_risk
 C044,retained,medium,monitor,Moderate engagement dip; insufficient evidence for immediate intervention,standard_monitor
 C045,retained,low,no_action_needed,"Healthy, stable usage across the observed period",standard_no_action

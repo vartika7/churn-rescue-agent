@@ -6,13 +6,13 @@ import { useMemo, useState } from "react";
 
 import { formatCurrency, formatPercent } from "@/lib/format";
 import type { RenewalStatus } from "@/lib/time";
+import type { Confidence, RiskLevel } from "@/lib/risk-engine";
 import {
-  RECOMMENDATIONS,
-  recommendationBadgeClass,
-  recommendationLabel,
-  recommendationRank,
-} from "@/lib/placeholder-risk";
-import type { Recommendation } from "@/lib/types";
+  RISK_LEVELS,
+  riskBadgeClass,
+  riskLabel,
+  riskRank,
+} from "@/lib/risk-display";
 import { Sparkline } from "./Sparkline";
 
 /**
@@ -45,8 +45,14 @@ export interface DashboardRow {
   /** activeDays - activeDaysPrior; null when the prior window is a different length. */
   activeDaysDelta: number | null;
 
-  /** Present-tense placeholder status. Active cohort only. */
-  recommendation: Recommendation | null;
+  /** Live engine assessment. Active cohort only — churned accounts are not scored. */
+  risk: {
+    level: RiskLevel;
+    score: number;
+    confidence: Confidence;
+    reason: string;
+    firingSignals: number;
+  } | null;
   renewalDateLabel: string;
   renewalDays: number;
   renewalCountdown: string;
@@ -59,7 +65,6 @@ export interface DashboardRow {
     badgeRank: number;
     churnDateLabel: string;
     churnDays: number;
-    churnCountdown: string;
     reason: string;
   } | null;
 }
@@ -90,7 +95,7 @@ const ACTIVE_COLUMNS: Column[] = [
   { key: "mrr", label: "MRR", numeric: true },
   { key: "trend", label: "Sessions 30d vs prior" },
   { key: "active", label: "Active 30d", numeric: true },
-  { key: "status", label: "Status" },
+  { key: "status", label: "Risk", numeric: false },
   { key: "renewal", label: "Renewal" },
 ];
 
@@ -151,7 +156,7 @@ export function CustomerTable({
       if (
         variant === "active" &&
         statusFilter !== "all" &&
-        (row.recommendation ?? "none") !== statusFilter
+        row.risk?.level !== statusFilter
       ) {
         return false;
       }
@@ -176,12 +181,19 @@ export function CustomerTable({
           if (b.trendPct === null) return -1;
           return (a.trendPct - b.trendPct) * direction;
         case "status":
-          return variant === "active"
-            ? (recommendationRank(a.recommendation) -
-                recommendationRank(b.recommendation)) *
-                direction || a.company.localeCompare(b.company)
-            : ((a.lost?.badgeRank ?? 9) - (b.lost?.badgeRank ?? 9)) *
-                direction || a.company.localeCompare(b.company);
+          if (variant === "active") {
+            // Rank first so bands stay together, then score within a band.
+            const byRank =
+              (riskRank(a.risk?.level ?? "low") - riskRank(b.risk?.level ?? "low")) *
+              direction;
+            if (byRank !== 0) return byRank;
+            const byScore = ((b.risk?.score ?? 0) - (a.risk?.score ?? 0)) * direction;
+            return byScore || a.company.localeCompare(b.company);
+          }
+          return (
+            ((a.lost?.badgeRank ?? 9) - (b.lost?.badgeRank ?? 9)) * direction ||
+            a.company.localeCompare(b.company)
+          );
         case "active":
           return (a.activeDays - b.activeDays) * direction;
         case "renewal":
@@ -238,15 +250,14 @@ export function CustomerTable({
             className="select"
             value={statusFilter}
             onChange={(event) => setStatusFilter(event.target.value)}
-            aria-label="Filter by placeholder status"
+            aria-label="Filter by risk level"
           >
-            <option value="all">All statuses</option>
-            {RECOMMENDATIONS.map((rec) => (
-              <option key={rec} value={rec}>
-                {recommendationLabel(rec)}
+            <option value="all">All risk levels</option>
+            {RISK_LEVELS.map((level) => (
+              <option key={level} value={level}>
+                {riskLabel(level)}
               </option>
             ))}
-            <option value="none">No case data</option>
           </select>
         )}
         <span className="result-count">
@@ -351,12 +362,19 @@ export function CustomerTable({
                   </div>
                 </td>
                 <td>
-                  {variant === "active" ? (
-                    <span
-                      className={recommendationBadgeClass(row.recommendation)}
-                    >
-                      {recommendationLabel(row.recommendation)}
-                    </span>
+                  {variant === "active" && row.risk ? (
+                    <div className="risk-cell" title={row.risk.reason}>
+                      <span className={riskBadgeClass(row.risk.level)}>
+                        {riskLabel(row.risk.level)}
+                      </span>
+                      <span className="risk-score mono">
+                        {row.risk.score}
+                        <span className="risk-score-sub">
+                          /100 · {row.risk.firingSignals} signal
+                          {row.risk.firingSignals === 1 ? "" : "s"}
+                        </span>
+                      </span>
+                    </div>
                   ) : (
                     <span className={row.lost?.badgeClass}>
                       {row.lost?.badgeLabel}

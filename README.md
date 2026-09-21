@@ -38,22 +38,26 @@ If either is missing the pages render a setup message instead of crashing.
 app/
   page.tsx                 Dashboard (Server Component); ?view=lost for churned
   customer/[id]/page.tsx   Customer detail (Server Component)
-  globals.css              Design tokens from the validated prototype
+  api/assess/route.ts      POST re-scores active customers; token-guarded
+  globals.css              Design tokens, light palette
 components/
   CustomerTable.tsx        'use client' — sort / filter / search
   UsageChart.tsx           'use client' — inline SVG + hover tooltip
   Sparkline.tsx            Sessions over the final 90 days on record
-  EvidencePanel.tsx        Supporting vs contradicting evidence
+  EvidencePanel.tsx        Engine signals split by direction
   PrototypeNote.tsx        Placeholder-data labelling
   SetupError.tsx           Readable credentials / connection failure
 lib/
+  risk-engine.ts           Phase 4 scoring: signals, points, level, confidence
+  risk-store.ts            Persists assessments; active customers only
+  risk-display.ts          Engine output → badges and labels
   supabase.ts              Server-only client + paginated `selectAll`
   queries.ts               All table reads
-  analysis.ts              Trend maths + evidence heuristics
-  placeholder-risk.ts      `evaluation_cases` → active + retrospective badges
+  analysis.ts              Trend and activity primitives the engine builds on
+  placeholder-risk.ts      `evaluation_cases` → retrospective lost-account badges
   time.ts                  getRealToday vs getLatestRecordedDate + countdowns
   format.ts                Presentation only: dates, currency, percents
-  constants.ts             Evidence thresholds + sparkline width
+  constants.ts             Risk weights, thresholds, window sizes
 supabase/
   schema.sql               Table DDL for all 9 tables (verified against live)
   seed.sql                 The dataset as SQL, self-verifying
@@ -93,7 +97,7 @@ rather than silently at load time.
 
 ### Restoring the database
 
-Two copies of the same 8,807 rows, both pulled from the live project and both
+Two copies of the same 8,682 rows, both pulled from the live project and both
 validated by round-tripping back to source. Use whichever fits the job.
 
 **`seed.sql` — to actually load it.** Run `schema.sql` then `seed.sql` (the
@@ -104,8 +108,8 @@ and one named row per failed assertion otherwise — row counts, the $22,920 MRR
 total, the 40/10 cohort split, and the invariants the app depends on (no
 post-churn activity, `renewal_date = outcome_date` for churned accounts).
 
-**`seed/*.csv` — to look at it or load it elsewhere.** Smaller (229 KB vs
-359 KB), diffable per row, and opens in a spreadsheet or a notebook. Files are
+**`seed/*.csv` — to look at it or load it elsewhere.** Smaller (236 KB vs
+360 KB), diffable per row, and opens in a spreadsheet or a notebook. Files are
 numbered `01_`–`06_` in foreign-key order, so load them in that order.
 
 One caveat if you import the CSVs through Supabase's table-editor UI rather than
@@ -140,7 +144,7 @@ generate `risk_assessments` for active customers only; churned data belongs to
 the Phase 7 evaluation harness.
 
 **Reads are paginated.** PostgREST caps a response at 1000 rows. `usage_daily`
-holds 8,323, so a plain `.select()` silently returns the first 1000 and drops
+holds 8,200, so a plain `.select()` silently returns the first 1000 and drops
 most customers off the dashboard. Use `selectAll` from `lib/supabase.ts`, and
 give it an ordering that is a _total_ order or rows can repeat across page
 boundaries.
@@ -210,7 +214,7 @@ the four places where the data shaped the code.
 | `support_tickets.resolution_status`        | `resolved` 19, `unresolved` 14, `escalated` 10                  |
 | `support_tickets.sentiment`                | `negative` 26, `neutral` 11, `positive` 6                       |
 | `subscriptions.payment_status`             | `paid` 292, `past_due` 1                                        |
-| `subscriptions.change_type`                | `renewal` 242, `new` 50, `payment_failed` 1                     |
+| `subscriptions.change_type`                | `renewal` 238, `new` 50, `payment_failed` 1                     |
 
 - The stored recommendation is `no_action_needed`, not the `no_action` the brief
   documented. `parseRecommendation` accepts both; drop the alias and 35
@@ -220,6 +224,13 @@ the four places where the data shaped the code.
 - `change_type` also carries the value `payment_failed`, so the billing evidence
   rule checks **both** `payment_status` and `change_type`. The one bad charge in
   the dataset (C014, 2026-05-09) happens to flag in both columns.
+- C042 (Granite Group) was converted into a recently-signed account — 38 days
+  of usage, two charges, no tickets — because the engine's `low` confidence
+  branch was unreachable otherwise: every other account has 112+ days of
+  history, so the sparse-data check never fired. It is the one case where the
+  engine declines to judge, which is the answer you want for an account nobody
+  has watched long enough. Converting an existing customer rather than adding a
+  51st kept the counts, the 40/10 split and the $22,920 total intact.
 - C028 (Juniper Group) carries two authored tickets, T0042 and T0043 — a
   performance complaint dated inside its Jun-Aug engagement dip and a recent
   export gap. They were written to give its `monitor` grading something to

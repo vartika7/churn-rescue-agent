@@ -629,6 +629,33 @@ table.grid tbody tr:hover {
   width: 100%;
 }
 
+/* Left gutter holds the y-axis labels. They are HTML rather than SVG text
+   because the plot uses preserveAspectRatio="none" and scales with the
+   viewport — SVG text would stretch with it and shrink to unreadable on a
+   phone. The gutter spans the same height as the svg, so a label's top
+   percentage maps straight onto the plot's vertical scale. */
+.chart-plot {
+  position: relative;
+  padding-left: 30px;
+}
+
+.chart-yaxis {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 26px;
+}
+
+.chart-ytick {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 10.5px;
+  color: var(--text-faint);
+  line-height: 1;
+}
+
 .chart-svg {
   display: block;
   width: 100%;
@@ -640,61 +667,68 @@ table.grid tbody tr:hover {
   display: flex;
   justify-content: space-between;
   margin-top: 8px;
+  padding-left: 30px; /* matches .chart-plot, so ticks align with the plot */
   font-size: 11px;
   color: var(--text-faint);
   gap: 8px;
 }
 
-.chart-yhint {
-  position: absolute;
-  top: 0;
-  left: 0;
-  font-size: 11px;
-  color: var(--text-faint);
-  pointer-events: none;
-}
-
-.chart-tooltip {
-  position: absolute;
-  top: 0;
-  z-index: 3;
-  transform: translateX(-50%);
-  background: var(--surface-3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 9px 11px;
-  font-size: 11.5px;
-  min-width: 158px;
-  pointer-events: none;
-  box-shadow: var(--shadow);
-}
-
-.chart-tooltip-date {
-  color: var(--text);
-  font-weight: 600;
-  margin-bottom: 6px;
-  font-size: 12px;
-}
-
-.chart-tooltip-row {
+/* The day readout sits above the plot rather than floating over it, so it can
+   never hide the shape being read. Fixed min-height keeps the idle and hovered
+   states the same size — otherwise moving onto the chart nudges it downward. */
+.chart-readout {
   display: flex;
-  justify-content: space-between;
+  align-items: baseline;
   gap: 14px;
-  color: var(--text-dim);
+  flex-wrap: wrap;
+  min-height: 34px;
+  padding: 7px 11px;
+  margin-bottom: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
 }
 
-.chart-tooltip-row span:last-child {
+.chart-readout-date {
+  font-weight: 600;
   color: var(--text);
+  white-space: nowrap;
 }
 
-.chart-legend {
+.chart-readout-idle {
+  color: var(--text-faint);
+}
+
+.chart-readout-metrics {
   display: flex;
   gap: 16px;
   flex-wrap: wrap;
-  font-size: 11.5px;
-  color: var(--text-faint);
-  margin-top: 10px;
 }
+
+.chart-metric {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.chart-metric-label {
+  color: var(--text-dim);
+}
+
+.chart-metric-value {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* Sessions is the series actually plotted; the other three are context. */
+.chart-metric-strong .chart-metric-label,
+.chart-metric-strong .chart-metric-value {
+  color: var(--link);
+  font-weight: 600;
+}
+
 
 /* -------------------------------------------------------------- Evidence */
 
@@ -897,4 +931,98 @@ table.grid tbody tr:hover {
 
 .tone-none {
   color: var(--text-faint);
+}
+
+/* ------------------------------------------------- Engine risk output */
+
+/* Level and score sit together: the badge is the triage decision, the number
+   is how far past the threshold it landed, which is what separates a 26 from
+   a 97 when both read "medium" or both read "high". */
+.risk-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+}
+
+.risk-score {
+  font-size: 12px;
+  color: var(--text-dim);
+}
+
+.risk-score-sub {
+  color: var(--text-faint);
+  font-size: 11px;
+}
+
+.risk-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.risk-header-score {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.risk-header-conf {
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+.risk-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.risk-summary-score {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.risk-summary-number {
+  font-size: 30px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.risk-summary-denom {
+  font-size: 15px;
+  color: var(--text-faint);
+  font-weight: 400;
+}
+
+/* No max-width: this is a one-line summary in a full-width card, not prose.
+   A 78ch cap wrapped it at roughly half the card for no reason. */
+.risk-summary-reason {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.risk-summary-conf {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-faint);
+}
+
+/* The points a signal contributed. Shown only when non-zero: a zero-point
+   signal is the record that something was checked and came back clean, and
+   printing "+0" against it reads as a score rather than an absence. */
+.evidence-points {
+  margin-left: auto;
+  flex: none;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--intervene);
+  background: var(--intervene-bg);
+  border: 1px solid var(--intervene-line);
+  border-radius: 999px;
+  padding: 1px 7px;
 }

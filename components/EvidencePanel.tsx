@@ -1,21 +1,35 @@
-import type { EvidenceItem, EvidenceSplit } from "@/lib/analysis";
+import type { RiskSignal } from "@/lib/risk-engine";
 
-export function EvidencePanel({ evidence }: { evidence: EvidenceSplit }) {
+/**
+ * Renders the risk engine's signals split by direction.
+ *
+ * This used to render a separate set of UI-layer heuristics, which meant the
+ * detail page showed two lists saying nearly the same thing with different
+ * numbers. The engine's signals already carry a source, a headline, a detail
+ * line and a direction, so they are the evidence — there is nothing to
+ * translate, and the panel can show the points each one contributed.
+ */
+export function EvidencePanel({ signals }: { signals: RiskSignal[] }) {
+  const supporting = signals.filter((s) => s.direction === "supporting");
+  const contradicting = signals.filter((s) => s.direction === "contradicting");
+
   return (
     <div className="evidence-grid">
       <Column
         title="Supporting evidence"
         subtitle="argues the account is at risk"
+        note="Only these add to the score — the total is a sum of risk points."
         variant="supporting"
-        items={evidence.supporting}
-        emptyText="No supporting signals found in usage, support or billing data."
+        signals={supporting}
+        emptyText="No signal in usage, support or billing argues for risk."
       />
       <Column
         title="Contradicting evidence"
         subtitle="argues against risk"
+        note="These add nothing to the score, by design: clean billing is the absence of a risk factor, not negative risk. They lower confidence instead — a split verdict is a less certain read than signals all pointing one way."
         variant="contradicting"
-        items={evidence.contradicting}
-        emptyText="No contradicting signals found in usage, support or billing data."
+        signals={contradicting}
+        emptyText="Nothing checked came back clean — every signal points at risk."
       />
     </div>
   );
@@ -25,37 +39,56 @@ function Column({
   title,
   subtitle,
   variant,
-  items,
+  signals,
   emptyText,
+  note,
 }: {
   title: string;
   subtitle: string;
   variant: "supporting" | "contradicting";
-  items: EvidenceItem[];
+  signals: RiskSignal[];
   emptyText: string;
+  note: string;
 }) {
+  const points = signals.reduce((sum, s) => sum + s.points, 0);
+
   return (
     <section className="evidence-col">
-      <header className={`evidence-head evidence-head-${variant}`}>
+      <header
+        className={`evidence-head evidence-head-${variant}`}
+        title={note}
+      >
         <span>{title}</span>
         <span className="evidence-count">
-          {items.length} · {subtitle}
+          {signals.length} ·{" "}
+          {variant === "supporting"
+            ? `${points > 0 ? `+${points} to the score · ` : ""}${subtitle}`
+            : `${subtitle} · affects confidence, not the score`}
         </span>
       </header>
 
-      {items.length === 0 ? (
+      {signals.length === 0 ? (
         <p className="evidence-empty">{emptyText}</p>
       ) : (
         <ul className="evidence-list">
-          {items.map((item, index) => (
-            <li className="evidence-item" key={`${item.source}-${index}`}>
-              <div className="evidence-top">
-                <span className="tag">{item.source}</span>
-                <span className="evidence-headline">{item.headline}</span>
-              </div>
-              {item.detail && <p className="evidence-detail">{item.detail}</p>}
-            </li>
-          ))}
+          {[...signals]
+            .sort((a, b) => b.points - a.points)
+            .map((signal) => (
+              <li className="evidence-item" key={signal.key}>
+                <div className="evidence-top">
+                  <span className="tag">{signal.source}</span>
+                  <span className="evidence-headline">{signal.headline}</span>
+                  {signal.points > 0 && (
+                    <span className="evidence-points mono">
+                      +{signal.points}
+                    </span>
+                  )}
+                </div>
+                {signal.detail && (
+                  <p className="evidence-detail">{signal.detail}</p>
+                )}
+              </li>
+            ))}
         </ul>
       )}
     </section>
