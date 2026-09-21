@@ -18,6 +18,7 @@ export function EvidencePanel({ signals }: { signals: RiskSignal[] }) {
       <Column
         title="Supporting evidence"
         subtitle="argues the account is at risk"
+        note="Only these add to the score — the total is a sum of risk points."
         variant="supporting"
         signals={supporting}
         emptyText="No signal in usage, support or billing argues for risk."
@@ -25,6 +26,7 @@ export function EvidencePanel({ signals }: { signals: RiskSignal[] }) {
       <Column
         title="Contradicting evidence"
         subtitle="argues against risk"
+        note="These add nothing to the score, by design: clean billing is the absence of a risk factor, not negative risk. They lower confidence instead — a split verdict is a less certain read than signals all pointing one way."
         variant="contradicting"
         signals={contradicting}
         emptyText="Nothing checked came back clean — every signal points at risk."
@@ -39,23 +41,29 @@ function Column({
   variant,
   signals,
   emptyText,
+  note,
 }: {
   title: string;
   subtitle: string;
   variant: "supporting" | "contradicting";
   signals: RiskSignal[];
   emptyText: string;
+  note: string;
 }) {
   const points = signals.reduce((sum, s) => sum + s.points, 0);
 
   return (
     <section className="evidence-col">
-      <header className={`evidence-head evidence-head-${variant}`}>
+      <header
+        className={`evidence-head evidence-head-${variant}`}
+        title={note}
+      >
         <span>{title}</span>
         <span className="evidence-count">
           {signals.length} ·{" "}
-          {variant === "supporting" && points > 0 ? `+${points} points · ` : ""}
-          {subtitle}
+          {variant === "supporting"
+            ? `${points > 0 ? `+${points} to the score · ` : ""}${subtitle}`
+            : `${subtitle} · affects confidence, not the score`}
         </span>
       </header>
 
