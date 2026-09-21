@@ -70,8 +70,15 @@ export const EVIDENCE_THRESHOLDS = {
 export const RISK_WEIGHTS = {
   /** Last 30 days on record vs the prior 30. */
   recentTrend: { severe: 25, major: 18, minor: 8 },
-  /** Whole observed history, first third vs last. */
-  historyTrend: { major: 15, minor: 6 },
+  /**
+   * Whole observed history, first third vs last.
+   *
+   * `minDays` because the claim is about a *sustained* trend, and thirds of a
+   * short history are too noisy to support it: at 38 days the comparison is
+   * 12-day thirds, which fired a spurious "sustained decline of 10%" on an
+   * account five weeks old. 90 days gives each third a month.
+   */
+  historyTrend: { major: 15, minor: 6, minDays: 90 },
   /** Days with no sessions inside the last 30 on record. */
   silence: { severe: 25, major: 18, minor: 8 },
   /** Consecutive silent days at the very end of the record. */

@@ -141,8 +141,13 @@ export function scoreCustomer(input: ScoreInput): RiskAssessment {
   }
 
   /* --- Usage: whole-history drift ---------------------------------- */
+  // Skipped entirely on a short history rather than scored at zero: "no
+  // sustained decline" would be just as unfounded a claim as the decline.
   const longRun = sessionsTrend(sessions);
-  if (longRun.pctChange !== null) {
+  if (
+    longRun.pctChange !== null &&
+    usage.length >= RISK_WEIGHTS.historyTrend.minDays
+  ) {
     const pct = Math.round(longRun.pctChange);
     const w = RISK_WEIGHTS.historyTrend;
     const points = pct <= -25 ? w.major : pct <= -8 ? w.minor : 0;

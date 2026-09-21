@@ -1,12 +1,12 @@
 -- Churn Rescue Agent — seed data
 --
--- Exported from the live Supabase project on 2026-09-20 by scripts/export-seed.mjs.
+-- Exported from the live Supabase project on 2026-09-21 by scripts/export-seed.mjs.
 -- Usage data spans 2025-10-19 to 2026-09-20.
 -- Load after schema.sql; the Supabase CLI runs both in order on
 -- `supabase db reset`, or paste this into the SQL editor.
 --
--- 50 customers (40 retained, 10 churned), 8323 usage_daily rows,
--- 43 support tickets, 293 billing charges, portfolio total
+-- 50 customers (40 retained, 10 churned), 8200 usage_daily rows,
+-- 43 support tickets, 289 billing charges, portfolio total
 -- $22,920 MRR.
 --
 -- risk_assessments, investigations and outreach are deliberately left empty:
@@ -16,7 +16,7 @@
 -- TRUNCATE rather than DELETE, and RESTART IDENTITY, because usage_daily and
 -- subscriptions have GENERATED ALWAYS AS IDENTITY primary keys and no unique
 -- constraint on their business columns. A plain re-run of the INSERTs would
--- silently duplicate all 8323 usage rows — no error, but every trend,
+-- silently duplicate all 8200 usage rows — no error, but every trend,
 -- sparkline and zero-activity count would then be computed on doubled data.
 -- Every table referencing customers is listed explicitly, so CASCADE is not
 -- needed; if a future table references customers and is not listed here, the
@@ -82,7 +82,7 @@ INSERT INTO public.customers (customer_id, company, plan, mrr, signup_date, rene
   ('C039', 'Marlowe Works', 'Growth', 215, '2024-10-23', '2026-09-27', 'Legal Services', '501-1000'),
   ('C040', 'Copper Group', 'Pro', 335, '2025-07-09', '2026-10-18', 'Energy', '501-1000'),
   ('C041', 'Westbrook Works', 'Growth', 230, '2025-03-09', '2026-08-16', 'Nonprofit', '51-100'),
-  ('C042', 'Granite Group', 'Growth', 215, '2024-10-11', '2026-10-16', 'Healthcare', '51-100'),
+  ('C042', 'Granite Group', 'Growth', 215, '2026-08-14', '2026-10-16', 'Healthcare', '51-100'),
   ('C043', 'Pioneer Analytics', 'Growth', 150, '2023-11-29', '2026-09-25', 'Media & Entertainment', '501-1000'),
   ('C044', 'Harborview Solutions', 'Pro', 615, '2024-11-06', '2026-10-06', 'Healthcare', '251-500'),
   ('C045', 'Pioneer Partners', 'Pro', 430, '2024-01-03', '2026-10-17', 'Insurance', '251-500'),
@@ -92,7 +92,7 @@ INSERT INTO public.customers (customer_id, company, plan, mrr, signup_date, rene
   ('C049', 'Harborview Networks', 'Growth', 105, '2026-02-01', '2026-10-19', 'Logistics', '1-50'),
   ('C050', 'Delta Solutions', 'Enterprise', 1425, '2025-04-11', '2026-10-14', 'Logistics', '1001+');
 
--- usage_daily (8323 rows)
+-- usage_daily (8200 rows)
 INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
   ('C001', '2026-04-28', 1, 1, 3, 7),
   ('C001', '2026-04-29', 2, 3, 10, 6),
@@ -6960,129 +6960,6 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C041', '2026-08-14', 1, 1, 2, 6),
   ('C041', '2026-08-15', 0, 0, 0, 0),
   ('C041', '2026-08-16', 2, 2, 3, 7),
-  ('C042', '2026-04-13', 2, 2, 7, 7),
-  ('C042', '2026-04-14', 2, 3, 12, 5),
-  ('C042', '2026-04-15', 0, 0, 0, 0),
-  ('C042', '2026-04-16', 3, 3, 9, 6),
-  ('C042', '2026-04-17', 3, 3, 12, 6),
-  ('C042', '2026-04-18', 3, 3, 11, 6),
-  ('C042', '2026-04-19', 4, 4, 8, 7),
-  ('C042', '2026-04-20', 3, 3, 6, 6),
-  ('C042', '2026-04-21', 4, 5, 13, 8),
-  ('C042', '2026-04-22', 5, 6, 15, 7),
-  ('C042', '2026-04-23', 0, 0, 0, 4),
-  ('C042', '2026-04-24', 1, 1, 3, 7),
-  ('C042', '2026-04-25', 2, 2, 7, 8),
-  ('C042', '2026-04-26', 4, 4, 7, 7),
-  ('C042', '2026-04-27', 2, 3, 8, 9),
-  ('C042', '2026-04-28', 2, 2, 4, 6),
-  ('C042', '2026-04-29', 0, 0, 0, 6),
-  ('C042', '2026-04-30', 4, 5, 20, 8),
-  ('C042', '2026-05-01', 2, 2, 4, 5),
-  ('C042', '2026-05-02', 4, 5, 13, 8),
-  ('C042', '2026-05-03', 2, 3, 9, 4),
-  ('C042', '2026-05-04', 1, 1, 2, 6),
-  ('C042', '2026-05-05', 2, 2, 6, 6),
-  ('C042', '2026-05-06', 3, 4, 11, 7),
-  ('C042', '2026-05-07', 3, 3, 5, 6),
-  ('C042', '2026-05-08', 2, 3, 6, 6),
-  ('C042', '2026-05-09', 6, 7, 26, 5),
-  ('C042', '2026-05-10', 5, 6, 19, 7),
-  ('C042', '2026-05-11', 3, 3, 8, 5),
-  ('C042', '2026-05-12', 0, 0, 0, 0),
-  ('C042', '2026-05-13', 2, 2, 3, 8),
-  ('C042', '2026-05-14', 4, 5, 11, 6),
-  ('C042', '2026-05-15', 4, 4, 15, 7),
-  ('C042', '2026-05-16', 4, 4, 16, 8),
-  ('C042', '2026-05-17', 5, 6, 17, 5),
-  ('C042', '2026-05-18', 0, 0, 0, 8),
-  ('C042', '2026-05-19', 3, 3, 5, 8),
-  ('C042', '2026-05-20', 3, 4, 7, 6),
-  ('C042', '2026-05-21', 1, 1, 4, 7),
-  ('C042', '2026-05-22', 5, 5, 20, 7),
-  ('C042', '2026-05-23', 0, 0, 0, 4),
-  ('C042', '2026-05-24', 2, 3, 8, 6),
-  ('C042', '2026-05-25', 1, 1, 2, 7),
-  ('C042', '2026-05-26', 3, 3, 10, 6),
-  ('C042', '2026-05-27', 1, 1, 2, 8),
-  ('C042', '2026-05-28', 4, 4, 9, 6),
-  ('C042', '2026-05-29', 3, 3, 6, 5),
-  ('C042', '2026-05-30', 2, 3, 11, 6),
-  ('C042', '2026-05-31', 0, 0, 0, 0),
-  ('C042', '2026-06-01', 4, 4, 9, 2),
-  ('C042', '2026-06-02', 1, 1, 2, 5),
-  ('C042', '2026-06-03', 1, 1, 3, 5),
-  ('C042', '2026-06-04', 5, 6, 18, 4),
-  ('C042', '2026-06-05', 6, 8, 19, 6),
-  ('C042', '2026-06-06', 2, 2, 7, 7),
-  ('C042', '2026-06-07', 0, 0, 0, 0),
-  ('C042', '2026-06-08', 2, 2, 5, 4),
-  ('C042', '2026-06-09', 2, 3, 9, 6),
-  ('C042', '2026-06-10', 1, 1, 4, 8),
-  ('C042', '2026-06-11', 4, 5, 9, 6),
-  ('C042', '2026-06-12', 4, 4, 16, 5),
-  ('C042', '2026-06-13', 0, 0, 0, 0),
-  ('C042', '2026-06-14', 2, 2, 7, 4),
-  ('C042', '2026-06-15', 2, 3, 11, 7),
-  ('C042', '2026-06-16', 4, 5, 12, 5),
-  ('C042', '2026-06-17', 0, 0, 0, 0),
-  ('C042', '2026-06-18', 2, 3, 6, 4),
-  ('C042', '2026-06-19', 1, 1, 4, 5),
-  ('C042', '2026-06-20', 2, 2, 7, 5),
-  ('C042', '2026-06-21', 6, 7, 14, 8),
-  ('C042', '2026-06-22', 4, 5, 11, 6),
-  ('C042', '2026-06-23', 6, 7, 19, 6),
-  ('C042', '2026-06-24', 2, 3, 7, 7),
-  ('C042', '2026-06-25', 4, 4, 8, 7),
-  ('C042', '2026-06-26', 2, 2, 4, 7),
-  ('C042', '2026-06-27', 0, 0, 0, 0),
-  ('C042', '2026-06-28', 0, 0, 0, 8),
-  ('C042', '2026-06-29', 2, 2, 7, 5),
-  ('C042', '2026-06-30', 6, 6, 13, 6),
-  ('C042', '2026-07-01', 8, 9, 24, 5),
-  ('C042', '2026-07-02', 3, 3, 12, 7),
-  ('C042', '2026-07-03', 0, 0, 0, 0),
-  ('C042', '2026-07-04', 1, 1, 2, 6),
-  ('C042', '2026-07-05', 0, 0, 0, 0),
-  ('C042', '2026-07-06', 3, 4, 6, 4),
-  ('C042', '2026-07-07', 2, 2, 3, 6),
-  ('C042', '2026-07-08', 3, 3, 10, 6),
-  ('C042', '2026-07-09', 6, 6, 10, 7),
-  ('C042', '2026-07-10', 2, 3, 6, 7),
-  ('C042', '2026-07-11', 4, 4, 13, 7),
-  ('C042', '2026-07-12', 3, 3, 10, 7),
-  ('C042', '2026-07-13', 3, 4, 15, 3),
-  ('C042', '2026-07-14', 1, 1, 3, 5),
-  ('C042', '2026-07-15', 3, 3, 5, 6),
-  ('C042', '2026-07-16', 4, 5, 18, 5),
-  ('C042', '2026-07-17', 0, 0, 0, 9),
-  ('C042', '2026-07-18', 2, 2, 8, 6),
-  ('C042', '2026-07-19', 3, 4, 13, 7),
-  ('C042', '2026-07-20', 2, 2, 4, 7),
-  ('C042', '2026-07-21', 4, 5, 16, 5),
-  ('C042', '2026-07-22', 2, 3, 12, 10),
-  ('C042', '2026-07-23', 2, 2, 8, 6),
-  ('C042', '2026-07-24', 5, 5, 14, 5),
-  ('C042', '2026-07-25', 0, 0, 0, 0),
-  ('C042', '2026-07-26', 2, 2, 7, 5),
-  ('C042', '2026-07-27', 4, 5, 9, 6),
-  ('C042', '2026-07-28', 3, 3, 7, 5),
-  ('C042', '2026-07-29', 0, 0, 0, 0),
-  ('C042', '2026-07-30', 5, 5, 17, 7),
-  ('C042', '2026-07-31', 4, 5, 10, 5),
-  ('C042', '2026-08-01', 3, 3, 7, 5),
-  ('C042', '2026-08-02', 4, 4, 7, 5),
-  ('C042', '2026-08-03', 3, 3, 6, 7),
-  ('C042', '2026-08-04', 6, 6, 9, 5),
-  ('C042', '2026-08-05', 2, 2, 3, 6),
-  ('C042', '2026-08-06', 3, 4, 6, 8),
-  ('C042', '2026-08-07', 3, 3, 10, 5),
-  ('C042', '2026-08-08', 2, 2, 4, 4),
-  ('C042', '2026-08-09', 2, 2, 8, 6),
-  ('C042', '2026-08-10', 3, 4, 7, 4),
-  ('C042', '2026-08-11', 4, 5, 20, 7),
-  ('C042', '2026-08-12', 3, 3, 10, 5),
-  ('C042', '2026-08-13', 3, 4, 14, 4),
   ('C042', '2026-08-14', 4, 5, 13, 5),
   ('C042', '2026-08-15', 0, 0, 0, 0),
   ('C042', '2026-08-16', 3, 3, 11, 6),
@@ -7106,8 +6983,7 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C042', '2026-09-03', 0, 0, 0, 0),
   ('C042', '2026-09-04', 3, 3, 8, 5),
   ('C042', '2026-09-05', 0, 0, 0, 0),
-  ('C042', '2026-09-06', 4, 5, 13, 7);
-INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
+  ('C042', '2026-09-06', 4, 5, 13, 7),
   ('C042', '2026-09-07', 3, 4, 10, 4),
   ('C042', '2026-09-08', 2, 2, 4, 8),
   ('C042', '2026-09-09', 1, 1, 4, 7),
@@ -7230,7 +7106,8 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C043', '2026-08-03', 2, 3, 11, 4),
   ('C043', '2026-08-04', 4, 5, 12, 7),
   ('C043', '2026-08-05', 1, 1, 4, 5),
-  ('C043', '2026-08-06', 1, 1, 4, 2),
+  ('C043', '2026-08-06', 1, 1, 4, 2);
+INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
   ('C043', '2026-08-07', 0, 0, 0, 0),
   ('C043', '2026-08-08', 3, 4, 6, 7),
   ('C043', '2026-08-09', 3, 4, 7, 4),
@@ -7607,8 +7484,7 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C045', '2026-08-28', 6, 8, 17, 5),
   ('C045', '2026-08-29', 6, 6, 23, 4),
   ('C045', '2026-08-30', 4, 4, 7, 7),
-  ('C045', '2026-08-31', 4, 4, 7, 5);
-INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
+  ('C045', '2026-08-31', 4, 4, 7, 5),
   ('C045', '2026-09-01', 4, 5, 14, 5),
   ('C045', '2026-09-02', 8, 9, 34, 5),
   ('C045', '2026-09-03', 4, 4, 11, 6),
@@ -7731,7 +7607,8 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C046', '2026-06-28', 3, 3, 11, 4),
   ('C046', '2026-06-29', 4, 5, 12, 6),
   ('C046', '2026-06-30', 2, 2, 7, 6),
-  ('C046', '2026-07-01', 1, 1, 4, 6),
+  ('C046', '2026-07-01', 1, 1, 4, 6);
+INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
   ('C046', '2026-07-02', 2, 2, 7, 6),
   ('C046', '2026-07-03', 1, 1, 3, 4),
   ('C046', '2026-07-04', 3, 4, 7, 5),
@@ -8108,8 +7985,7 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C048', '2026-03-28', 0, 0, 0, 0),
   ('C048', '2026-03-29', 1, 1, 4, 9),
   ('C048', '2026-03-30', 0, 0, 0, 0),
-  ('C048', '2026-03-31', 0, 0, 0, 0);
-INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
+  ('C048', '2026-03-31', 0, 0, 0, 0),
   ('C048', '2026-04-01', 0, 0, 0, 0),
   ('C048', '2026-04-02', 0, 0, 0, 4),
   ('C048', '2026-04-03', 1, 1, 3, 7),
@@ -8232,7 +8108,8 @@ INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions
   ('C049', '2026-08-12', 2, 2, 6, 5),
   ('C049', '2026-08-13', 3, 3, 6, 5),
   ('C049', '2026-08-14', 2, 3, 10, 4),
-  ('C049', '2026-08-15', 0, 0, 0, 8),
+  ('C049', '2026-08-15', 0, 0, 0, 8);
+INSERT INTO public.usage_daily (customer_id, date, logins, sessions, key_actions, feature_usage) VALUES
   ('C049', '2026-08-16', 3, 3, 10, 5),
   ('C049', '2026-08-17', 5, 6, 10, 7),
   ('C049', '2026-08-18', 5, 6, 14, 6),
@@ -8480,7 +8357,7 @@ INSERT INTO public.support_tickets (ticket_id, customer_id, date, subject, descr
   ('T0042', 'C028', '2026-06-03', 'Bulk imports timing out since June', 'Imports that used to finish in a couple of minutes now time out around the halfway mark. We have gone back to entering records by hand.', 'performance', 'negative', 'unresolved'),
   ('T0043', 'C028', '2026-08-28', 'Export always includes the full list', 'There is no way to export just the filtered view, so we strip out the rows we do not need by hand every time we send a report on.', 'export', 'negative', 'unresolved');
 
--- subscriptions (293 rows)
+-- subscriptions (289 rows)
 INSERT INTO public.subscriptions (customer_id, date, plan, mrr, payment_status, change_type) VALUES
   ('C001', '2026-04-28', 'Pro', 305, 'paid', 'new'),
   ('C001', '2026-05-28', 'Pro', 305, 'paid', 'renewal'),
@@ -8722,11 +8599,7 @@ INSERT INTO public.subscriptions (customer_id, date, plan, mrr, payment_status, 
   ('C041', '2026-05-25', 'Growth', 230, 'paid', 'renewal'),
   ('C041', '2026-06-24', 'Growth', 230, 'paid', 'renewal'),
   ('C041', '2026-07-24', 'Growth', 230, 'paid', 'renewal'),
-  ('C042', '2026-04-19', 'Growth', 215, 'paid', 'new'),
-  ('C042', '2026-05-19', 'Growth', 215, 'paid', 'renewal'),
-  ('C042', '2026-06-18', 'Growth', 215, 'paid', 'renewal'),
-  ('C042', '2026-07-18', 'Growth', 215, 'paid', 'renewal'),
-  ('C042', '2026-08-17', 'Growth', 215, 'paid', 'renewal'),
+  ('C042', '2026-08-17', 'Growth', 215, 'paid', 'new'),
   ('C042', '2026-09-16', 'Growth', 215, 'paid', 'renewal'),
   ('C043', '2026-04-28', 'Growth', 150, 'paid', 'new'),
   ('C043', '2026-05-28', 'Growth', 150, 'paid', 'renewal'),
@@ -8872,7 +8745,7 @@ INSERT INTO public.evaluation_cases (customer_id, actual_outcome, expected_risk_
   ('C039', 'retained', 'low', 'no_action_needed', 'Healthy, stable usage across the observed period', 'standard_no_action'),
   ('C040', 'retained', 'low', 'no_action_needed', 'Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal', 'false_positive_risk'),
   ('C041', 'churned', 'high', 'intervene', 'Sustained, sharp decline in product engagement with no recovery signal', 'standard_intervene'),
-  ('C042', 'retained', 'low', 'no_action_needed', 'Healthy, stable usage across the observed period', 'standard_no_action'),
+  ('C042', 'retained', 'low', 'no_action_needed', 'Recently signed; too little history to establish a trend, and nothing adverse in what is observable', 'standard_no_action'),
   ('C043', 'retained', 'low', 'no_action_needed', 'Low absolute usage but stable-to-growing trend; baseline behavior, not a risk signal', 'false_positive_risk'),
   ('C044', 'retained', 'medium', 'monitor', 'Moderate engagement dip; insufficient evidence for immediate intervention', 'standard_monitor'),
   ('C045', 'retained', 'low', 'no_action_needed', 'Healthy, stable usage across the observed period', 'standard_no_action'),
@@ -8896,9 +8769,9 @@ COMMIT;
 WITH checks(assertion, actual, expected) AS (
   VALUES
     ('customers row count',       (SELECT count(*) FROM public.customers)::text,         '50'),
-    ('usage_daily row count',     (SELECT count(*) FROM public.usage_daily)::text,       '8323'),
+    ('usage_daily row count',     (SELECT count(*) FROM public.usage_daily)::text,       '8200'),
     ('support_tickets row count', (SELECT count(*) FROM public.support_tickets)::text,   '43'),
-    ('subscriptions row count',   (SELECT count(*) FROM public.subscriptions)::text,     '293'),
+    ('subscriptions row count',   (SELECT count(*) FROM public.subscriptions)::text,     '289'),
     ('customer_outcomes count',   (SELECT count(*) FROM public.customer_outcomes)::text, '50'),
     ('evaluation_cases count',    (SELECT count(*) FROM public.evaluation_cases)::text,  '50'),
     ('risk_assessments empty',    (SELECT count(*) FROM public.risk_assessments)::text,  '0'),
