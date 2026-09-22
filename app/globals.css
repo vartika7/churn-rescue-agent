@@ -1243,3 +1243,54 @@ table.grid tbody tr:hover {
   color: var(--muted);
   word-break: break-word;
 }
+
+/* ---------------------------------------------------------------------------
+   Outreach panel (Phase 6)
+   --------------------------------------------------------------------------- */
+
+/* The draft is set apart from the interface chrome so it reads as a message
+   rather than as more dashboard. */
+.outreach-draft {
+  margin-top: 12px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface-2, rgba(0, 0, 0, 0.02));
+}
+
+.outreach-subject {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.outreach-body {
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+
+/* Stated once, prominently, in the panel's own colour rather than as small
+   print: "approved" must not be read as "sent". */
+.outreach-notsent {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-left: 3px solid var(--monitor-line);
+  background: var(--monitor-bg);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.outreach-original {
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.outreach-original summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.outreach-original .outreach-subject,
+.outreach-original .outreach-body {
+  margin-top: 6px;
+  color: var(--muted);
+}

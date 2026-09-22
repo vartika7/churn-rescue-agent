@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 
 import { EvidencePanel } from "@/components/EvidencePanel";
 import { InvestigationPanel } from "@/components/InvestigationPanel";
+import { OutreachPanel } from "@/components/OutreachPanel";
 import { PrototypeNote } from "@/components/PrototypeNote";
 import { SetupError } from "@/components/SetupError";
 import { UsageChart } from "@/components/UsageChart";
@@ -15,6 +16,7 @@ import {
   riskLabelAtChurn,
 } from "@/lib/risk-display";
 import { fetchLatestInvestigation } from "@/lib/investigation-store";
+import { fetchLatestOutreach } from "@/lib/outreach-store";
 import { getLatestRecordedDate, renewalCountdown } from "@/lib/time";
 import {
   recommendationBadgeClass,
@@ -41,13 +43,13 @@ export default async function CustomerPage({
 }) {
   const { id } = await params;
 
-  let customer, usage, tickets, subscriptions, riskCase, outcome, investigation;
+  let customer, usage, tickets, subscriptions, riskCase, outcome, investigation, outreach;
 
   try {
     customer = await fetchCustomer(id);
     if (!customer) notFound();
 
-    [usage, tickets, subscriptions, riskCase, outcome, investigation] =
+    [usage, tickets, subscriptions, riskCase, outcome, investigation, outreach] =
       await Promise.all([
         fetchCustomerUsage(id),
         fetchCustomerTickets(id),
@@ -57,6 +59,8 @@ export default async function CustomerPage({
         // Reading the stored investigation, never running one: a page render
         // must not trigger a paid model call.
         fetchLatestInvestigation(id),
+        // Read only. A page render must never draft or send anything.
+        fetchLatestOutreach(id),
       ]);
   } catch (error) {
     // `notFound()` signals via a thrown control-flow error; let it through
@@ -246,6 +250,10 @@ export default async function CustomerPage({
           retrospective badge above exists to avoid. Their investigations
           belong to the Phase 7 harness, which grades root causes offline. */}
       {isChurned ? null : <InvestigationPanel stored={investigation} />}
+      {/* Churned accounts get no outreach panel either: drafting a message to
+          a customer who left in April is the same category of mistake as
+          recommending an intervention for them. */}
+      {isChurned ? null : <OutreachPanel stored={outreach} />}
 
       <section className="section">
         <div className="section-head">
