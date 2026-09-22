@@ -37,6 +37,7 @@ If either is missing the pages render a setup message instead of crashing.
 | `npm run typecheck` | `tsc --noEmit`                         |
 | `npm test`          | Unit tests — engine, harness, dates, display (no database) |
 | `npm run evaluate`  | Grade the engine against the seed, write `EVALUATION.md` |
+| `npm run investigate` | Investigate flagged accounts (needs the app running) |
 
 ## Structure
 
@@ -85,6 +86,7 @@ supabase/
 scripts/
   export-seed.mjs          Re-export seed.sql + CSVs from the live database
   evaluate.ts              Grade the engine, write EVALUATION.md
+  investigate.ts           Investigate flagged accounts; quota-aware
 test/
   helpers.ts               Synthetic fixture builders — no database
   risk-engine.test.ts      Signal bands, score cap, confidence, leakage
@@ -200,6 +202,25 @@ tokens are charged against `maxOutputTokens`, and left to the model's
 discretion a 2048 ceiling went 1532 to reasoning and 500 to output, truncating
 the JSON mid-object. With it off the same request finishes in 835 tokens and
 parses. A full investigation runs about 1,400 in and 650 out.
+
+**The free tier is 20 requests per DAY per model** — not per minute. Verified
+from the 429 body: `GenerateRequestsPerDayPerProjectPerModel-FreeTier`,
+`quotaValue: 20`. The quota is per model, so a second model adds another 20 at
+the cost of comparability between accounts.
+
+**Only flagged accounts are investigated** (`npm run investigate`, score >= 25).
+That is a product decision the quota merely confirms: the engine already
+answers a low-risk account with "no signals fired", and spending a model call
+to explain why a healthy customer is healthy produces a paragraph nobody
+opens. Currently 6 of 40 active accounts qualify, which fits the daily cap with
+room to re-run. `--all` exists and warns before exhausting the quota;
+`--offline` costs nothing.
+
+Churned accounts are never investigated, for the same reason they are not
+scored: a recommendation is an instruction about what to do next, and there is
+nothing to do next for an account that left in April. The customer page
+suppresses the panel for them rather than rendering a present-tense
+recommendation on a dead account.
 
 **With no key configured** the offline provider runs instead. It restates the
 evidence and does not read the ticket prose, which is the entire point of the
