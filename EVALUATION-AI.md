@@ -21,26 +21,30 @@ afterwards, which is the entire difference between grading and leaking.
 
 ## Results
 
-Graded **11** stored investigations.
+Graded **8** stored investigations from a real model.
+
+Offline placeholders are excluded. That provider composes its citations from
+the evidence package, so it scores a perfect grounding rate by construction and
+can never produce a phantom entity — including it would pad the denominator
+with cases that cannot fail.
 
 | Metric | Result | What a failure would mean |
 | --- | --- | --- |
-| Structured-output validity | 11/11 | The response could not be parsed into the required shape |
-| Fully grounded | 11/11 (mean 1.000) | A citation pointed at evidence that was never supplied |
-| Free of phantom entities | 11/11 | A ticket id or date was named in prose but is absent from the package |
+| Structured-output validity | 8/8 | The response could not be parsed into the required shape |
+| Fully grounded | 8/8 (mean 1.000) | A citation pointed at evidence that was never supplied |
+| Free of phantom entities | 8/8 | A ticket id or date was named in prose but is absent from the package |
 | Uncited claims | 0 | A claim asserted with nothing behind it |
-| Engaged the counter-case | 11/11 | Contradicting evidence was available and ignored |
-| Aligned with the risk band | 7/11 | — |
-| Escalated beyond the band | 4/11 | Not a failure; see below |
-| De-escalated below the band | 0/11 | Talking a CSM out of looking at a flagged account |
-| Uncertainty claimed correctly | 11/11 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 9.7 of ~12 available | A low number means it fixated on one signal |
+| Engaged the counter-case | 8/8 | Contradicting evidence was available and ignored |
+| Aligned with the risk band | 4/8 | — |
+| Escalated beyond the band | 4/8 | Not a failure; see below |
+| De-escalated below the band | 0/8 | Talking a CSM out of looking at a flagged account |
+| Uncertainty claimed correctly | 8/8 | It invented a root cause on thin evidence, or refused on rich evidence |
+| Mean distinct evidence cited | 11.4 of ~11 available | A low number means it fixated on one signal |
 
 ### Per account
 
 | Account | Model | Valid | Grounding | Phantoms | Counter-case | Action | Band | Insufficient |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C001 | offline-fixture | yes | 1.00 | none | used | monitor | medium (33) | no |
 | C002 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
 | C003 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (16) ↑ | no |
 | C006 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | low (22) ↑ | no |
@@ -48,13 +52,11 @@ Graded **11** stored investigations.
 | C009 | gemini-3.5-flash | yes | 1.00 | none | used | no_action_needed | low (0) | no |
 | C011 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (23) ↑ | no |
 | C027 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (36) | no |
-| C035 | offline-fixture | yes | 1.00 | none | used | intervene | high (70) | no |
 | C038 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (61) | no |
-| C049 | offline-fixture | yes | 1.00 | none | used | monitor | medium (26) | no |
 
 ### Where the model disagreed with the engine
 
-The model recommended more urgency than the deterministic band on **4 of 11** accounts, and less on 0.
+The model recommended more urgency than the deterministic band on **4 of 8** accounts, and less on 0.
 
 | Account | Score | Band | Model said |
 | --- | --- | --- | --- |
@@ -83,24 +85,17 @@ tickets; it cannot read them. A ticket whose *status* is mild and whose
 
 **De-escalations would be the worrying direction**, and there are none here. An escalation adds an account to a worklist and costs a CSM ten minutes; a de-escalation takes one off, and the cost of being wrong is a churn nobody looked at.
 
-### By model
-
-| Model | Cases | Mean grounding | With phantoms |
-| --- | --- | --- | --- |
-| offline-fixture | 3 | 1.000 | 0 |
-| gemini-3.5-flash | 8 | 1.000 | 0 |
-
 ## Recommendation against the human grading
 
-Agreed on **5 of 11** (45%).
+Agreed on **3 of 8** (38%).
 
 | `expected_recommendation` | Model said | Accounts |
 | --- | --- | --- |
-| no_action_needed | monitor ← | 5 |
-| monitor | monitor | 2 |
-| intervene | intervene | 2 |
+| no_action_needed | monitor ← | 4 |
 | monitor | intervene ← | 1 |
 | no_action_needed | no_action_needed | 1 |
+| monitor | monitor | 1 |
+| intervene | intervene | 1 |
 
 Disagreement is not automatically a model error. `expected_recommendation` was
 written with knowledge of the outcome; the model is blind to it by design, and

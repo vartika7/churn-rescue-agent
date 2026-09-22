@@ -18,7 +18,7 @@
  *   npm start                       # in one shell
  *   npm run investigate             # flagged accounts missing a live result
  *   npm run investigate -- --force      # redo ones already done
- *   npm run investigate -- --offline    # no quota spent
+ *   npm run investigate -- --offline    # no quota spent, and nothing stored
  *   npm run investigate -- --all        # every active account; will hit the cap
  *   npm run investigate -- --limit 5    # stop after five
  *   npm run investigate -- --dry        # list what it would do

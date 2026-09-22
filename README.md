@@ -266,12 +266,24 @@ exists, but scoring prose against prose by string similarity produces a number
 that tracks phrasing rather than correctness, and a metric that looks rigorous
 while measuring nothing is worse than an admitted gap.
 
-Current results across 11 stored investigations: 11/11 valid shape, 11/11
-fully grounded, **0 phantom entities, 0 uncited claims**, 11/11 engaged the
-counter-case, 11/11 claimed uncertainty correctly.
+Current results across 8 real investigations: 8/8 valid shape, 8/8 fully
+grounded, **0 phantom entities, 0 uncited claims**, 8/8 engaged the
+counter-case, 8/8 claimed uncertainty correctly.
+
+**Offline placeholders are excluded from these numbers**, and the reason is a
+bug worth recording. An `--offline` validation run persisted six rows, three of
+which superseded real Gemini results, and the grader then counted them as AI
+output. That provider builds its citations from the evidence package, so it
+scores a perfect grounding rate by construction and can never produce a phantom
+entity — it was padding the denominator with cases incapable of failing.
+Offline runs no longer persist without an explicit opt-in, and the grader skips
+them.
 
 **The most useful finding is a disagreement.** The model recommended more
-urgency than the deterministic band on 4 accounts and less on **0**. Every
+urgency than the deterministic band on **4 of 8** accounts and less on **0**.
+Excluding the offline rows sharpened this rather than softening it: that
+provider mirrors the band by construction, so every placeholder counted as
+agreement. Every
 escalation is an account where signals fired but summed below the flag
 threshold — C006 clearest of all: an unresolved negative ticket, *"Dashboard
 taking 20-30 seconds to load"*, open two months, plus a mild decline. The
