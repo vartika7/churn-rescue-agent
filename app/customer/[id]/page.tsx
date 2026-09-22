@@ -239,7 +239,13 @@ export default async function CustomerPage({
         <EvidencePanel signals={assessment.signals} />
       </section>
 
-      <InvestigationPanel stored={investigation} />
+      {/* Churned accounts are not investigated, for the same reason they are
+          not scored: a recommendation is an instruction about what to do next,
+          and there is nothing to do next for an account that left in April.
+          Rendering one would repeat the present-tense-verdict bug the
+          retrospective badge above exists to avoid. Their investigations
+          belong to the Phase 7 harness, which grades root causes offline. */}
+      {isChurned ? null : <InvestigationPanel stored={investigation} />}
 
       <section className="section">
         <div className="section-head">

@@ -102,16 +102,18 @@ CREATE TABLE public.risk_assessments (
 -- the model said and when, which is what lets an investigation be graded after
 -- the fact and a changed verdict be reconstructed.
 --
--- The three *_summary columns predate the structured investigation schema and
--- are no longer written. They are kept so an existing database does not need a
--- destructive migration; drop them if you want the table tidy.
+-- This table originally carried usage_summary, support_summary and
+-- subscription_summary — written in Phase 2 on the assumption that an
+-- investigation would summarise each data source in turn. By the time Phase 5
+-- was built the useful decomposition turned out to be by argument instead
+-- (root cause, evidence for, evidence against, recommendation), because the
+-- finding that matters usually crosses sources: C035's is "unresolved support
+-- ticket -> lost trust -> usage collapse", which cannot be split three ways
+-- without destroying it. The columns were never written and have been dropped.
 CREATE TABLE public.investigations (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_id text NOT NULL
         REFERENCES public.customers(customer_id),
-    usage_summary text,
-    support_summary text,
-    subscription_summary text,
     -- Mirrored out of the jsonb because it is the one field worth querying.
     root_cause_hypothesis text,
     -- The validated Investigation object: interpretation, root cause,
