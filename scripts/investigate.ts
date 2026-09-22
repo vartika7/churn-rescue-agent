@@ -21,7 +21,6 @@
  *   npm run investigate -- --offline    # no quota spent, and nothing stored
  *   npm run investigate -- --all        # every active account; will hit the cap
  *   npm run investigate -- --limit 5    # stop after five
- *   npm run investigate -- --audit 3    # plus 3 low-risk accounts, to catch under-flagging
  *   npm run investigate -- --dry        # list what it would do
  */
 import { readFileSync } from "node:fs";
@@ -46,20 +45,7 @@ const ALL = has("--all");
 const DRY = has("--dry");
 /** Re-investigate accounts that already have a live result. Off by default. */
 const FORCE = has("--force");
-/**
- * Investigate this many low-risk accounts alongside the flagged ones.
- *
- * Flagged-only is blind to under-flagging by construction: you cannot find out
- * that the engine misses things by only looking at what it caught. Every
- * escalation in EVALUATION-AI.md came from a low-risk account — C006 scored 22
- * with an unresolved negative ticket the engine could count but not read — and
- * those were investigated by accident, before the flagged-only rule existed.
- *
- * So a small audit sample is deliberate rather than waste. Highest-scoring
- * low-risk accounts first, since the under-threshold band is where the engine
- * is weakest.
- */
-const AUDIT = Number(value("--audit") ?? 0);
+
 const LIMIT = Number(value("--limit") ?? Number.POSITIVE_INFINITY);
 /** Free tier is 20/day/model; pacing only helps with the per-minute window. */
 const DELAY_MS = 1500;
@@ -157,13 +143,7 @@ function group<T extends { customer_id: string }>(rows: T[]) {
   };
 
   const flagged = scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium);
-  const audit = Number.isFinite(AUDIT) && AUDIT > 0
-    ? scored
-        .filter((s) => s.score < RISK_LEVEL_THRESHOLDS.medium)
-        .sort((a, b) => b.score - a.score)
-        .slice(0, AUDIT)
-    : [];
-  const eligible = ALL ? scored : [...flagged, ...audit];
+  const eligible = ALL ? scored : flagged;
   const skipped =
     OFFLINE || FORCE ? [] : eligible.filter((s) => alreadyLive(s.id));
   const selected = eligible
@@ -173,10 +153,7 @@ function group<T extends { customer_id: string }>(rows: T[]) {
 
   console.log(
     `${active.length} active accounts, ${flagged.length} flagged ` +
-      `(score >= ${RISK_LEVEL_THRESHOLDS.medium})` +
-      (audit.length
-        ? `, plus ${audit.length} low-risk audit sample (${audit.map((a) => `${a.id}:${a.score}`).join(", ")})`
-        : ""),
+      `(score >= ${RISK_LEVEL_THRESHOLDS.medium})`,
   );
   console.log(
     `investigating ${selected.length}${OFFLINE ? " via the offline provider" : ""}` +

@@ -232,19 +232,45 @@ opens. Currently 6 of 40 active accounts qualify, which fits the daily cap with
 room to re-run. `--all` exists and warns before exhausting the quota;
 `--offline` costs nothing.
 
-**Flagged-only is blind to under-flagging, by construction.** You cannot learn
-that the engine misses things by only looking at what it caught. Every
-escalation in `EVALUATION-AI.md` came from a low-risk account, and those were
-investigated by accident — before the flagged-only rule existed. `--audit N`
-adds the N highest-scoring low-risk accounts so that sample is deliberate
-rather than a leftover; the under-threshold band (16-23) is where the engine is
-weakest and where the escalations cluster.
+**The table holds medium and high risk active accounts only.** Low-risk accounts
+are not investigated: the engine already answers them with "no signals fired",
+and a paragraph explaining why a healthy customer is healthy is one nobody
+opens.
 
-Not every escalation is insight, which is the honest bound on that finding.
-C006 at 22 is a genuine catch: an unresolved negative ticket the engine could
-count but not read. C007 at **0** is over-caution — no signals at all, and the
-model suggested monitoring because the account had never filed a ticket. One in
-four being noise is exactly why a CSM approves rather than the system acting.
+#### A finding from a sample that is no longer in the table
+
+Before that rule existed, a run investigated every active account, including 34
+low-risk ones, and reached 8 before the daily quota stopped it. Those five
+low-risk investigations produced the single most useful result in the project,
+recorded here because the rows behind it have since been removed:
+
+| Account | Engine score | Model said |
+| --- | --- | --- |
+| C003 | 16 | monitor |
+| C006 | 22 | intervene |
+| C011 | 23 | monitor |
+| C007 | 0 | monitor |
+
+Every escalation sat in the 16-23 band, immediately under the flag threshold of
+25. C006 is the clearest: an unresolved negative ticket — *"Dashboard taking
+20-30 seconds to load"*, open two months — that the engine counted for 8 points
+and could not read. The model read it, tied it to a mild usage decline, and
+said intervene.
+
+That is the same defect `EVALUATION.md` reached independently by grading the
+engine against human labels: the middle band is under-sensitive, because two
+minor signals at 8 points each total 16 and never surface.
+
+C007 is the counterweight and the reason not to over-read this. It scored **0**,
+has no tickets at all, and the model suggested monitoring an 8% decline that
+sits below the engine's own minor threshold. One escalation in four was
+over-caution, which is why a CSM approves rather than the system acting.
+
+**The methodological point survives the data.** A flagged-only policy cannot
+detect under-flagging: you learn nothing about what the engine misses by
+looking only at what it caught. Periodically sampling a few high-scoring
+low-risk accounts would surface it — worth doing deliberately if this ever ran
+for real, and noted here rather than left as an accident.
 
 Churned accounts are never investigated, for the same reason they are not
 scored: a recommendation is an instruction about what to do next, and there is
