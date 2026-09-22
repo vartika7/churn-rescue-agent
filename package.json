@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "evaluate": "tsx scripts/evaluate.ts",
-    "investigate": "tsx scripts/investigate.ts"
+    "investigate": "tsx scripts/investigate.ts",
+    "evaluate:ai": "tsx scripts/evaluate-ai.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.116.0",
