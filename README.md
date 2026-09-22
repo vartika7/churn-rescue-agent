@@ -232,6 +232,20 @@ opens. Currently 6 of 40 active accounts qualify, which fits the daily cap with
 room to re-run. `--all` exists and warns before exhausting the quota;
 `--offline` costs nothing.
 
+**Flagged-only is blind to under-flagging, by construction.** You cannot learn
+that the engine misses things by only looking at what it caught. Every
+escalation in `EVALUATION-AI.md` came from a low-risk account, and those were
+investigated by accident — before the flagged-only rule existed. `--audit N`
+adds the N highest-scoring low-risk accounts so that sample is deliberate
+rather than a leftover; the under-threshold band (16-23) is where the engine is
+weakest and where the escalations cluster.
+
+Not every escalation is insight, which is the honest bound on that finding.
+C006 at 22 is a genuine catch: an unresolved negative ticket the engine could
+count but not read. C007 at **0** is over-caution — no signals at all, and the
+model suggested monitoring because the account had never filed a ticket. One in
+four being noise is exactly why a CSM approves rather than the system acting.
+
 Churned accounts are never investigated, for the same reason they are not
 scored: a recommendation is an instruction about what to do next, and there is
 nothing to do next for an account that left in April. The customer page
