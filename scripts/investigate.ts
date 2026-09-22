@@ -45,6 +45,7 @@ const ALL = has("--all");
 const DRY = has("--dry");
 /** Re-investigate accounts that already have a live result. Off by default. */
 const FORCE = has("--force");
+
 const LIMIT = Number(value("--limit") ?? Number.POSITIVE_INFINITY);
 /** Free tier is 20/day/model; pacing only helps with the per-minute window. */
 const DELAY_MS = 1500;
@@ -141,9 +142,8 @@ function group<T extends { customer_id: string }>(rows: T[]) {
     return Boolean(p && p !== "mock");
   };
 
-  const eligible = ALL
-    ? scored
-    : scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium);
+  const flagged = scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium);
+  const eligible = ALL ? scored : flagged;
   const skipped =
     OFFLINE || FORCE ? [] : eligible.filter((s) => alreadyLive(s.id));
   const selected = eligible
@@ -152,7 +152,7 @@ function group<T extends { customer_id: string }>(rows: T[]) {
     .slice(0, LIMIT);
 
   console.log(
-    `${active.length} active accounts, ${scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium).length} flagged ` +
+    `${active.length} active accounts, ${flagged.length} flagged ` +
       `(score >= ${RISK_LEVEL_THRESHOLDS.medium})`,
   );
   console.log(
