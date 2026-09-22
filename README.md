@@ -2,7 +2,16 @@
 
 Internal customer-success console for retention risk triage. Next.js App Router
 reading live from Supabase, with a deterministic risk engine that is unit-tested
-and graded against held-out churn outcomes (`EVALUATION.md`).
+and graded against held-out churn outcomes, and an LLM investigation layer whose
+every claim is checked back against the evidence it was given.
+
+**[CASE-STUDY.md](CASE-STUDY.md)** is the place to start if you want the
+reasoning: why the risk score is not a model, how the LLM is constrained, what
+both layers measured, and where they fail. This README is the operational side —
+how to run it.
+
+Generated reports: [`EVALUATION.md`](EVALUATION.md) (the engine) and
+[`EVALUATION-AI.md`](EVALUATION-AI.md) (the investigation layer).
 
 ## Setup
 
@@ -96,6 +105,7 @@ test/
   evaluation.test.ts       The harness's own metric maths
   time.test.ts             The two date reference points
   risk-display.test.ts     Past-tense rule for churned accounts
+CASE-STUDY.md              The reasoning: architecture, evaluation, failure modes
 EVALUATION.md              Generated: how good is the engine?
 EVALUATION-AI.md           Generated: how good is the investigation layer?
 ```
