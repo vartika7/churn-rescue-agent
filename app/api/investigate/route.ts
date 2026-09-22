@@ -32,6 +32,18 @@ export const dynamic = "force-dynamic";
  * Deliberately one customer per request. Investigating all 40 in one call
  * would sit far past any sane serverless timeout, and a partial failure
  * halfway through a batch is worse than 40 independent outcomes.
+ *
+ * NO DEDUPLICATION, also deliberately. Every accepted call appends a row, even
+ * if the account was investigated a minute ago. This route is the mechanism;
+ * which accounts to investigate and how often is policy, and it lives in
+ * scripts/investigate.ts — the same split that keeps `scoreCustomer` free of
+ * any opinion about which customers to score.
+ *
+ * Re-running is a real use: after a prompt change, after the dataset shifts,
+ * or to compare two models on one account. A route that refused would need a
+ * bypass flag and end up back here with more code. The consequence to know is
+ * that calling this in a loop will spend the day's quota, so batch through the
+ * script, which skips accounts that already have a live investigation.
  */
 export async function POST(request: Request) {
   const expected = process.env.ASSESS_TOKEN;
