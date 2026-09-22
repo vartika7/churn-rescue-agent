@@ -72,6 +72,18 @@ export interface EvidencePackage {
  *
  * Note what is absent and cannot be added without editing this type: outcome,
  * outcome_date, expected_risk_level, expected_recommendation, case_type.
+ *
+ * `renewal_date` is absent too, and that one is deliberate rather than
+ * incidental. It looks like ordinary commercial context — "renews in 27 days"
+ * is genuinely material to churn timing, and a live run asked for it in its
+ * limitations. But churned accounts in this dataset carry
+ * `renewal_date = outcome_date`, so handing it over would tell the model the
+ * exact date every churned account left. It is outcome data wearing a
+ * commercial label, and it is the subtlest leak in the schema.
+ *
+ * If renewal timing is ever needed here, derive a coarse bucket from the real
+ * clock instead of passing the date through, and check what it reveals for a
+ * churned account before shipping it.
  */
 export interface EvidenceInput {
   customerId: string;
@@ -96,6 +108,37 @@ const dayDiff = (from: string, to: string) =>
 
 /** `billing.2026-09-02` — dates are unique per customer in this dataset. */
 const chargeId = (date: string) => `billing.${date}`;
+
+/**
+ * How a charge is described to the model.
+ *
+ * `change_type` is literally "renewal" on most rows, but these are monthly
+ * billing charges, NOT contract renewals — the contract renewal is
+ * `customers.renewal_date`, a different date entirely. Passing the raw value
+ * through led the model to write "the most recent renewal on September 19",
+ * which is wrong in exactly the way the UI already refuses to be: the same
+ * rule that `chargeNote` enforces on the customer page.
+ *
+ * So the benign values are dropped and only the meaningful ones survive.
+ */
+function chargeNote(changeType: string): string | null {
+  switch ((changeType ?? "").trim().toLowerCase()) {
+    case "renewal":
+    case "none":
+    case "":
+      return null;
+    case "new":
+      return "first charge";
+    case "upgrade":
+      return "plan upgrade";
+    case "downgrade":
+      return "plan downgrade";
+    case "payment_failed":
+      return "payment failed";
+    default:
+      return changeType;
+  }
+}
 
 export function buildEvidencePackage(input: EvidenceInput): EvidencePackage {
   const items: EvidenceItem[] = [];
@@ -127,10 +170,13 @@ export function buildEvidencePackage(input: EvidenceInput): EvidencePackage {
   }
 
   for (const c of input.charges) {
+    const note = chargeNote(c.change_type);
     items.push({
       id: chargeId(c.date),
       kind: "charge",
-      summary: `${c.date} · $${c.mrr} · ${c.payment_status} · ${c.change_type}`,
+      summary:
+        `${c.date} · $${c.mrr} charged · ${c.payment_status}` +
+        (note ? ` · ${note}` : ""),
       direction: "neutral",
     });
   }

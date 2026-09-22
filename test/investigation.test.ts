@@ -94,6 +94,18 @@ describe("no outcome leakage", () => {
     assert.ok(!serialised.includes("standard_intervene"));
   });
 
+  // renewal_date == outcome_date for every churned account, so passing it to
+  // the model would hand over the exact date each one left. It looks like
+  // commercial context, which is what makes it the subtlest leak available.
+  test("the renewal date never reaches the model", () => {
+    const pkg = pkgFor();
+    const serialised = JSON.stringify(pkg);
+    assert.ok(!/renewal_date/.test(serialised));
+    assert.ok(!/renewalDate/.test(serialised));
+    // The customer's real renewal is 2026-10-19; it must appear nowhere.
+    assert.ok(!serialised.includes("2026-10-19"));
+  });
+
   test("the instructions forbid guessing the outcome", () => {
     assert.match(SYSTEM_PROMPT, /must not guess/i);
   });
@@ -271,6 +283,41 @@ describe("evidence package", () => {
     const ids = pkg.items.map((i) => i.id);
     assert.equal(new Set(ids).size, ids.length, "duplicate evidence ids");
     assert.equal(citableIds(pkg).size, ids.length);
+  });
+
+  // The project-wide rule: subscriptions rows are monthly billing charges and
+  // must never be called renewals. The contract renewal is a different date.
+  // A live run reproduced the forbidden phrasing because the raw change_type
+  // ("renewal") was passed straight through to the model.
+  test("never describes a billing charge as a renewal", () => {
+    const rendered = buildUserPrompt(
+      pkgFor({
+        charges: [
+          charge({ date: "2026-09-19", change_type: "renewal" }),
+          charge({ date: "2026-08-20", change_type: "renewal" }),
+        ],
+      }),
+    );
+    const billing = rendered.slice(rendered.indexOf("Billing charges"));
+    assert.ok(
+      !/·\s*renewal/i.test(billing),
+      "the raw change_type must not reach the model",
+    );
+    assert.match(rendered, /NOT contract renewals/);
+    assert.match(SYSTEM_PROMPT, /never describe a charge as a renewal/i);
+  });
+
+  test("still surfaces a meaningful change_type", () => {
+    const rendered = buildUserPrompt(
+      pkgFor({
+        charges: [
+          charge({ date: "2026-04-01", change_type: "new" }),
+          charge({ date: "2026-09-02", change_type: "payment_failed" }),
+        ],
+      }),
+    );
+    assert.match(rendered, /first charge/);
+    assert.match(rendered, /payment failed/);
   });
 
   test("says so explicitly when there are no tickets", () => {

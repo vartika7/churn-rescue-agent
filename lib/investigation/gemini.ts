@@ -34,6 +34,24 @@ export interface GeminiConfig {
   /** e.g. the current free-tier flash model. Comes from the environment. */
   model: string;
   timeoutMs?: number;
+  /**
+   * Internal reasoning budget, in tokens. Defaults to 0 — off.
+   *
+   * This is not a tuning knob, it is a correctness one. Thinking tokens are
+   * charged against `maxOutputTokens`, so with the budget left to the model's
+   * discretion a 2048 ceiling was consumed 1532 by reasoning and 500 by
+   * output, truncating the JSON mid-object and failing validation. With
+   * thinking off the same request finishes in 835 tokens total and parses.
+   *
+   * The task is interpretation and citation discipline over an evidence list
+   * that is already structured, not multi-step deduction, so the reasoning
+   * bought little and cost roughly four times the tokens — which matters on a
+   * per-day free-tier quota. Raise it if root-cause quality turns out to need
+   * it, and raise maxOutputTokens with it.
+   */
+  thinkingBudget?: number;
+  /** Attempts for retryable failures (429, 5xx). 2 means one retry. */
+  attempts?: number;
 }
 
 /** Reads config from the environment, or null when it is not configured. */
@@ -50,7 +68,13 @@ export class GeminiProvider implements InvestigationProvider {
   constructor(private readonly config: GeminiConfig) {}
 
   async complete(request: CompletionRequest): Promise<CompletionResult> {
-    const { apiKey, model, timeoutMs = DEFAULT_TIMEOUT_MS } = this.config;
+    const {
+      apiKey,
+      model,
+      timeoutMs = DEFAULT_TIMEOUT_MS,
+      thinkingBudget = 0,
+      attempts = 2,
+    } = this.config;
     // Key travels as a header, not a query string: query strings end up in
     // logs, proxies and error messages.
     const url = `${ENDPOINT}/${encodeURIComponent(model)}:generateContent`;
@@ -60,41 +84,64 @@ export class GeminiProvider implements InvestigationProvider {
       contents: [{ role: "user", parts: [{ text: request.user }] }],
       generationConfig: {
         temperature: request.temperature ?? 0,
-        maxOutputTokens: request.maxOutputTokens ?? 2048,
+        // Headroom well past the ~630 tokens a full investigation needs, so a
+        // verbose account does not truncate.
+        maxOutputTokens: request.maxOutputTokens ?? 4096,
         responseMimeType: "application/json",
+        ...(thinkingBudget >= 0
+          ? { thinkingConfig: { thinkingBudget } }
+          : {}),
       },
     };
 
-    let res: Response;
-    try {
-      res = await withTimeout(
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-goog-api-key": apiKey,
-          },
-          body: JSON.stringify(body),
-        }),
-        timeoutMs,
-        "Gemini request",
-      );
-    } catch (err) {
-      if (err instanceof ProviderError) throw err;
-      throw new ProviderError("Gemini request failed", err, true);
+    // The newest flash models returned 503 "high demand" on two separate
+    // probes, so one retry is worth having. Bounded deliberately: a longer
+    // backoff chain on a free tier just queues behind the same congestion.
+    let res: Response | undefined;
+    let lastError: ProviderError | undefined;
+
+    for (let attempt = 1; attempt <= Math.max(1, attempts); attempt++) {
+      try {
+        res = await withTimeout(
+          fetch(url, {
+            method: "POST",
+            headers: {
+              "content-type": "application/json",
+              "x-goog-api-key": apiKey,
+            },
+            body: JSON.stringify(body),
+          }),
+          timeoutMs,
+          "Gemini request",
+        );
+      } catch (err) {
+        lastError =
+          err instanceof ProviderError
+            ? err
+            : new ProviderError("Gemini request failed", err, true);
+        res = undefined;
+      }
+
+      if (res?.ok) break;
+
+      if (res && !res.ok) {
+        const detail = await res.text().catch(() => "");
+        // 429 and 5xx are worth retrying; 400/401/403 mean the request or the
+        // key is wrong and retrying just burns quota.
+        const retryable = res.status === 429 || res.status >= 500;
+        lastError = new ProviderError(
+          `Gemini returned ${res.status}${detail ? `: ${truncate(detail)}` : ""}`,
+          undefined,
+          retryable,
+        );
+        res = undefined;
+      }
+
+      if (!lastError?.retryable || attempt === attempts) throw lastError;
+      await new Promise((r) => setTimeout(r, 750 * attempt));
     }
 
-    if (!res.ok) {
-      const detail = await res.text().catch(() => "");
-      // 429 and 5xx are worth retrying; 400/401/403 mean the request or the
-      // key is wrong and retrying just burns quota.
-      const retryable = res.status === 429 || res.status >= 500;
-      throw new ProviderError(
-        `Gemini returned ${res.status}${detail ? `: ${truncate(detail)}` : ""}`,
-        undefined,
-        retryable,
-      );
-    }
+    if (!res) throw lastError ?? new ProviderError("Gemini request failed");
 
     const payload = (await res
       .json()
@@ -106,7 +153,11 @@ export class GeminiProvider implements InvestigationProvider {
     if (finish && finish !== "STOP") {
       // MAX_TOKENS in particular yields truncated JSON, which would otherwise
       // surface as a confusing parse error several layers away.
-      throw new ProviderError(`Gemini stopped early (${finish})`);
+      const hint =
+        finish === "MAX_TOKENS"
+          ? " — raise maxOutputTokens, or lower thinkingBudget: reasoning tokens are charged against the same ceiling"
+          : "";
+      throw new ProviderError(`Gemini stopped early (${finish})${hint}`);
     }
 
     const text = candidate?.content?.parts

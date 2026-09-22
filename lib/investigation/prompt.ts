@@ -30,7 +30,8 @@ RULES
 3. Argue both ways. Populate "contradicting" with the genuine case against the risk hypothesis. If usage is down but support is clean and billing has never failed, say so. An investigation that only agrees with the score is not useful.
 4. Read the ticket text. Support ticket subjects and descriptions are the richest thing in the package and the part the rules could only count, not interpret. A ticket about admins locked out of their accounts means something different from one about an export format.
 5. Admit uncertainty. If the evidence will not support a root cause, set "insufficientEvidence" to true, say what is missing in "limitations", and do not manufacture a hypothesis. "Too little history to judge" is a valid and useful answer.
-6. Do not infer the outcome. You are not told whether this customer stayed or left, and you must not guess. Write as though the account is live and the decision is still open, because that is the situation this is used in.
+6. Billing charges are not renewals. The charge list is a history of monthly payments. A customer\'s contract renewal date is a separate thing and is not given to you, so never describe a charge as a renewal or infer a renewal date from one.
+7. Do not infer the outcome. You are not told whether this customer stayed or left, and you must not guess. Write as though the account is live and the decision is still open, because that is the situation this is used in.
 
 OUTPUT
 
@@ -101,7 +102,10 @@ export function renderEvidence(pkg: EvidencePackage): string {
 
   section("Signals measured by the risk engine:", byKind("signal"));
   section("Support tickets (read the text):", byKind("ticket"));
-  section("Billing history:", byKind("charge"));
+  section(
+    "Billing charges — monthly payments, NOT contract renewals:",
+    byKind("charge"),
+  );
 
   if (byKind("ticket").length === 0) {
     lines.push(

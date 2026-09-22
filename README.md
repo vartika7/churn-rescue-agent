@@ -170,11 +170,36 @@ Contradicting evidence is structural: the package carries the engine's
 zero-point signals — the record that something was checked and found clean.
 Without them the model could only ever confirm the score.
 
+Two things learned from the first live run, both now enforced:
+
+- **The model wrote "the most recent renewal on September 19".** `change_type`
+  is literally `renewal` on most `subscriptions` rows, and passing it through
+  raw reproduced the framing the UI already refuses — these are monthly
+  charges; the contract renewal is a different date. The package now applies
+  the same `chargeNote` rule the customer page does.
+- **`renewal_date` is deliberately withheld**, and it is the subtlest leak in
+  the schema. It reads as ordinary commercial context, and the model asked for
+  it — but churned accounts carry `renewal_date = outcome_date`, so supplying
+  it would hand over the exact date every churned account left.
+
 **Provider is swappable.** The app talks to `InvestigationProvider` (system
 prompt, user prompt, text back) and never to a vendor SDK, so adding Claude
 means adding a file. `GEMINI_MODEL` is deliberately not defaulted: free-tier
 model names move, and a stale default fails at request time with a confusing
 404.
+
+**Model choice is verified, not assumed.** `gemini-2.5-flash` — the model a
+2026-vintage guess would land on — now returns 404 for new keys, and
+`3.7`/`3.8-flash` returned 503 under load on two separate probes. The list
+endpoint is the source of truth. A pinned version is used rather than the
+`gemini-flash-latest` alias so evaluation numbers stay attributable to a
+specific model.
+
+**Thinking is disabled** (`thinkingBudget: 0`). Not a tuning preference: those
+tokens are charged against `maxOutputTokens`, and left to the model's
+discretion a 2048 ceiling went 1532 to reasoning and 500 to output, truncating
+the JSON mid-object. With it off the same request finishes in 835 tokens and
+parses. A full investigation runs about 1,400 in and 650 out.
 
 **With no key configured** the offline provider runs instead. It restates the
 evidence and does not read the ticket prose, which is the entire point of the
