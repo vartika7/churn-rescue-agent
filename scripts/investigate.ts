@@ -16,7 +16,8 @@
  * client is server-only and cannot be imported here.
  *
  *   npm start                       # in one shell
- *   npm run investigate             # flagged accounts, live provider
+ *   npm run investigate             # flagged accounts missing a live result
+ *   npm run investigate -- --force      # redo ones already done
  *   npm run investigate -- --offline    # no quota spent
  *   npm run investigate -- --all        # every active account; will hit the cap
  *   npm run investigate -- --limit 5    # stop after five
@@ -42,6 +43,8 @@ const value = (flag: string) => {
 const OFFLINE = has("--offline");
 const ALL = has("--all");
 const DRY = has("--dry");
+/** Re-investigate accounts that already have a live result. Off by default. */
+const FORCE = has("--force");
 const LIMIT = Number(value("--limit") ?? Number.POSITIVE_INFINITY);
 /** Free tier is 20/day/model; pacing only helps with the per-minute window. */
 const DELAY_MS = 1500;
@@ -115,9 +118,36 @@ function group<T extends { customer_id: string }>(rows: T[]) {
     return { id, score: assessment.score, level: assessment.riskLevel };
   });
 
-  const selected = (
-    ALL ? scored : scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium)
-  )
+  // Accounts whose most recent investigation already came from a real model.
+  // Skipped by default: at 20 requests per day, re-investigating an account
+  // that already has a good result is the most expensive thing this script can
+  // do, and a partly-failed batch is the normal case rather than the exception.
+  const existing = await selectAll<{
+    customer_id: string;
+    provider: string;
+    created_at: string;
+  }>("investigations", "customer_id,provider,created_at");
+
+  const latestProvider = new Map<string, string>();
+  for (const row of [...existing].sort((a, b) =>
+    b.created_at.localeCompare(a.created_at),
+  )) {
+    if (!latestProvider.has(row.customer_id)) {
+      latestProvider.set(row.customer_id, row.provider);
+    }
+  }
+  const alreadyLive = (id: string) => {
+    const p = latestProvider.get(id);
+    return Boolean(p && p !== "mock");
+  };
+
+  const eligible = ALL
+    ? scored
+    : scored.filter((s) => s.score >= RISK_LEVEL_THRESHOLDS.medium);
+  const skipped =
+    OFFLINE || FORCE ? [] : eligible.filter((s) => alreadyLive(s.id));
+  const selected = eligible
+    .filter((s) => OFFLINE || FORCE || !alreadyLive(s.id))
     .sort((a, b) => b.score - a.score)
     .slice(0, LIMIT);
 
@@ -129,6 +159,12 @@ function group<T extends { customer_id: string }>(rows: T[]) {
     `investigating ${selected.length}${OFFLINE ? " via the offline provider" : ""}` +
       (ALL ? " — every active account, including low risk" : ""),
   );
+  if (skipped.length) {
+    console.log(
+      `skipping ${skipped.length} that already have a live investigation ` +
+        `(${skipped.map((s) => s.id).join(", ")}); --force to redo them`,
+    );
+  }
   if (!OFFLINE && selected.length > 20) {
     console.log(
       `WARNING: the Gemini free tier allows 20 requests per day per model. ` +
