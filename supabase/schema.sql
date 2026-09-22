@@ -130,12 +130,40 @@ CREATE TABLE public.investigations (
     created_at timestamptz DEFAULT now()
 );
 
+-- Phase 6. Appended like the other two, so a customer's outreach history is a
+-- record rather than a current value.
+--
+-- The original draft and the CSM's edit live in separate columns and never
+-- overwrite each other. A rejection says the draft was wrong; an edit says it
+-- was nearly right, and the difference between body and edited_body is the
+-- only honest measure of drafting quality. Overwriting would discard it.
+--
+-- `status = 'approved'` means a human judged the message fit to send. It does
+-- NOT mean it was sent: nothing in this codebase sends anything, and there is
+-- no disabled or feature-flagged path that does.
 CREATE TABLE public.outreach (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_id text NOT NULL
         REFERENCES public.customers(customer_id),
+    -- Carried over from the investigation this draft was built from.
     recommended_action text,
+    subject text,
+    body text,
+    -- Evidence ids the message's claims rest on, same discipline as
+    -- investigations: a customer email citing something that does not exist is
+    -- a credibility loss the company cannot take back.
+    citations jsonb,
+    check_before_sending text,
+    -- draft | approved | rejected
     status text,
+    -- Null unless the CSM actually changed something.
+    edited_subject text,
+    edited_body text,
+    decided_by text,
+    decided_at timestamptz,
+    provider text,
+    model text,
+    -- What happened afterwards, for a later phase.
     outcome text,
     created_at timestamptz DEFAULT now()
 );
