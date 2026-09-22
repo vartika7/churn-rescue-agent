@@ -18,6 +18,9 @@ npm run dev
 | --------------------------- | ------------------------------------------------------- |
 | `SUPABASE_URL`              | Supabase → Project Settings → Data API → Project URL    |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → `service_role` |
+| `ASSESS_TOKEN`              | Any random string; guards the two POST routes           |
+| `GEMINI_API_KEY`            | Optional. Without it, investigations use the offline path |
+| `GEMINI_MODEL`              | Required alongside the key. Deliberately not defaulted   |
 
 Neither is prefixed `NEXT_PUBLIC_`, deliberately. The service role key bypasses
 row-level security, so `lib/supabase.ts` imports `server-only` — an accidental
@@ -42,17 +45,29 @@ app/
   page.tsx                 Dashboard (Server Component); ?view=lost for churned
   customer/[id]/page.tsx   Customer detail (Server Component)
   api/assess/route.ts      POST re-scores active customers; token-guarded
+  api/investigate/route.ts POST investigates one customer; token-guarded
   globals.css              Design tokens, light palette
 components/
   CustomerTable.tsx        'use client' — sort / filter / search
   UsageChart.tsx           'use client' — inline SVG + hover tooltip
   Sparkline.tsx            Sessions over the final 90 days on record
   EvidencePanel.tsx        Engine signals split by direction
+  InvestigationPanel.tsx   AI investigation with inline citations
   PrototypeNote.tsx        Placeholder-data labelling
   SetupError.tsx           Readable credentials / connection failure
 lib/
   risk-engine.ts           Phase 4 scoring: signals, points, level, confidence
   evaluation.ts            Phase 7 grading; the only module reading outcomes
+  investigation/
+    evidence.ts            The only thing the model sees; no outcome field
+    schema.ts              Structured output + grounding validation
+    prompt.ts              System prompt and evidence rendering
+    provider.ts            Provider interface; vendor-agnostic
+    gemini.ts              Gemini client (server-only; reads the key)
+    factory.ts             Provider selection from the environment
+    mock.ts                Offline provider — not an investigation
+    run.ts                 Orchestration: package -> provider -> validate
+  investigation-store.ts   Appends investigations; degrades if unmigrated
   risk-store.ts            Persists assessments; active customers only
   risk-display.ts          Engine output → badges and labels
   supabase.ts              Server-only client + paginated `selectAll`
@@ -127,6 +142,51 @@ Two findings are worth knowing before reading anything else in this repo:
 
 Neither is fixed. They are the output of the harness doing its job, and
 `EVALUATION.md` states what it would take to address them.
+
+### AI investigation (Phase 5)
+
+The layer that answers *why*, sitting on top of the deterministic score rather
+than replacing it. `POST /api/investigate?customer=C035`, token-guarded with
+`ASSESS_TOKEN`; `&offline=1` forces the offline path, `&save=0` skips
+persistence.
+
+Three guarantees, each enforced in code and each with a test that fails when
+the enforcement is removed:
+
+- **No outcome leakage.** `buildEvidencePackage` has no parameter for an
+  outcome, `case_type` or `expected_*` — the same signature trick
+  `scoreCustomer` uses. "Did the model see the answer?" is settled by reading
+  the type, not by auditing a prompt.
+- **Grounding is checked, not requested.** Every evidence item has a stable id
+  and the model must cite ids. A citation that does not resolve is a
+  fabrication and the whole investigation is rejected rather than repaired —
+  silently dropping it would leave a plausible claim with nothing behind it.
+  `grounding_rate` is stored per run.
+- **Uncertainty is available.** `insufficientEvidence` is the only way to
+  submit an uncited root cause, so "I cannot tell" is a first-class answer
+  instead of something the model has to invent its way around.
+
+Contradicting evidence is structural: the package carries the engine's
+zero-point signals — the record that something was checked and found clean.
+Without them the model could only ever confirm the score.
+
+**Provider is swappable.** The app talks to `InvestigationProvider` (system
+prompt, user prompt, text back) and never to a vendor SDK, so adding Claude
+means adding a file. `GEMINI_MODEL` is deliberately not defaulted: free-tier
+model names move, and a stale default fails at request time with a confusing
+404.
+
+**With no key configured** the offline provider runs instead. It restates the
+evidence and does not read the ticket prose, which is the entire point of the
+layer — so it is labelled as a placeholder in the UI and says so in its own
+`limitations` field. An unlabelled placeholder shown as AI output is a lie to
+whoever reads the screen.
+
+The `investigations` table needs four columns added before results can be
+saved (`investigation jsonb`, `provider text`, `model text`, `grounding_rate
+numeric`) — see `supabase/schema.sql`. Until then reads return "no
+investigation yet" rather than breaking the page: the deterministic score is
+the product and must not depend on this layer.
 
 ### Keeping the dataset aligned
 
@@ -436,9 +496,13 @@ Set Node 22 in Vercel's project settings regardless.
 
 ## Not yet built
 
-- Phase 5 investigation agent. `investigations` and `outreach` are
-  intentionally empty and unqueried; it needs an Anthropic API key and a model
-  choice before it can start.
+- Phase 6 recommendations and outreach. `outreach` is still empty and
+  unqueried. The investigation already produces a recommended action; what is
+  missing is the approve / edit / reject flow and the drafted message. Nothing
+  is ever sent automatically.
+- Phase 5 has never run against a real model. The pipeline, validation and UI
+  are complete and tested against the offline provider; a live run needs
+  `GEMINI_API_KEY` and `GEMINI_MODEL`.
 - Phase 8 deployment. Nothing is on Vercel yet — it needs `SUPABASE_URL`,
   `SUPABASE_SERVICE_ROLE_KEY` and `ASSESS_TOKEN` set in project settings.
 - Phase 7 acts on its own findings. The harness reports that the middle band is

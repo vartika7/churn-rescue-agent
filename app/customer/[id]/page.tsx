@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { EvidencePanel } from "@/components/EvidencePanel";
+import { InvestigationPanel } from "@/components/InvestigationPanel";
 import { PrototypeNote } from "@/components/PrototypeNote";
 import { SetupError } from "@/components/SetupError";
 import { UsageChart } from "@/components/UsageChart";
@@ -13,6 +14,7 @@ import {
   riskLabel,
   riskLabelAtChurn,
 } from "@/lib/risk-display";
+import { fetchLatestInvestigation } from "@/lib/investigation-store";
 import { getLatestRecordedDate, renewalCountdown } from "@/lib/time";
 import {
   recommendationBadgeClass,
@@ -39,19 +41,23 @@ export default async function CustomerPage({
 }) {
   const { id } = await params;
 
-  let customer, usage, tickets, subscriptions, riskCase, outcome;
+  let customer, usage, tickets, subscriptions, riskCase, outcome, investigation;
 
   try {
     customer = await fetchCustomer(id);
     if (!customer) notFound();
 
-    [usage, tickets, subscriptions, riskCase, outcome] = await Promise.all([
-      fetchCustomerUsage(id),
-      fetchCustomerTickets(id),
-      fetchCustomerSubscriptions(id),
-      fetchPlaceholderRiskCase(id),
-      fetchCustomerOutcome(id),
-    ]);
+    [usage, tickets, subscriptions, riskCase, outcome, investigation] =
+      await Promise.all([
+        fetchCustomerUsage(id),
+        fetchCustomerTickets(id),
+        fetchCustomerSubscriptions(id),
+        fetchPlaceholderRiskCase(id),
+        fetchCustomerOutcome(id),
+        // Reading the stored investigation, never running one: a page render
+        // must not trigger a paid model call.
+        fetchLatestInvestigation(id),
+      ]);
   } catch (error) {
     // `notFound()` signals via a thrown control-flow error; let it through
     // instead of reporting a missing customer as a Supabase failure.
@@ -218,14 +224,12 @@ export default async function CustomerPage({
         </div>
 
         <PrototypeNote>
-          <strong>No AI investigation has run.</strong> The{" "}
-          <code>investigations</code> table is empty and is not queried anywhere
-          in this build. Every signal below comes from the Phase 4 engine in{" "}
-          <code>lib/risk-engine.ts</code>: fixed thresholds over sessions,
-          silent days, open tickets and failed charges, each contributing a
-          fixed number of points. The same inputs always give the same score —
-          that is what makes it gradeable, and what Phase 5&apos;s investigation
-          agent will sit on top of rather than replace.
+          <strong>These signals are not AI output.</strong> Every one comes
+          from the Phase 4 engine in <code>lib/risk-engine.ts</code>: fixed
+          thresholds over sessions, silent days, open tickets and failed
+          charges, each contributing a fixed number of points. The same inputs
+          always give the same score — that is what makes it gradeable, and
+          what the investigation below sits on top of rather than replaces.
           <br />
           The engine reads only usage, support and billing, and its signature
           accepts no outcome, so on a churned account these are the signals that
@@ -234,6 +238,8 @@ export default async function CustomerPage({
         </PrototypeNote>
         <EvidencePanel signals={assessment.signals} />
       </section>
+
+      <InvestigationPanel stored={investigation} />
 
       <section className="section">
         <div className="section-head">

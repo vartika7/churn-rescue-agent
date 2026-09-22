@@ -63,6 +63,25 @@ const CONFIDENCES: InvestigationConfidence[] = ["high", "medium", "low"];
 export type ValidationResult =
   { ok: true; value: Investigation } | { ok: false; errors: string[] };
 
+/**
+ * Strips a markdown fence if the model wrapped its JSON in one.
+ *
+ * Providers are asked for raw JSON and mostly comply, but a fenced block is
+ * the single most common way a perfectly good response arrives unparseable.
+ * Handled here rather than in one provider because any of them can do it.
+ */
+export function stripFence(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed.startsWith("```")) return trimmed;
+  return trimmed
+    .replace(/^```(?:json)?\s*/i, "")
+    .replace(/\s*```$/, "")
+    .trim();
+}
+
+const describe = (v: unknown): string =>
+  v === null ? "null" : Array.isArray(v) ? "an array" : `a ${typeof v}`;
+
 const isStr = (v: unknown): v is string =>
   typeof v === "string" && v.trim().length > 0;
 
@@ -114,11 +133,22 @@ export function validateInvestigation(
 
   let obj: Record<string, unknown>;
   if (typeof raw === "string") {
+    let parsed: unknown;
     try {
-      obj = JSON.parse(raw) as Record<string, unknown>;
+      parsed = JSON.parse(stripFence(raw));
     } catch {
       return { ok: false, errors: ["response was not valid JSON"] };
     }
+    // A double-encoded response parses to a string rather than an object.
+    // Without this the field checks below emit a dozen misleading errors
+    // about missing fields instead of naming the actual problem.
+    if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) {
+      return {
+        ok: false,
+        errors: [`response JSON was ${describe(parsed)}, not an object`],
+      };
+    }
+    obj = parsed as Record<string, unknown>;
   } else if (raw && typeof raw === "object") {
     obj = raw as Record<string, unknown>;
   } else {

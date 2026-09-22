@@ -98,6 +98,13 @@ CREATE TABLE public.risk_assessments (
     created_at timestamptz DEFAULT now()
 );
 
+-- Phase 5 output, appended rather than updated: the table is a record of what
+-- the model said and when, which is what lets an investigation be graded after
+-- the fact and a changed verdict be reconstructed.
+--
+-- The three *_summary columns predate the structured investigation schema and
+-- are no longer written. They are kept so an existing database does not need a
+-- destructive migration; drop them if you want the table tidy.
 CREATE TABLE public.investigations (
     id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     customer_id text NOT NULL
@@ -105,7 +112,19 @@ CREATE TABLE public.investigations (
     usage_summary text,
     support_summary text,
     subscription_summary text,
+    -- Mirrored out of the jsonb because it is the one field worth querying.
     root_cause_hypothesis text,
+    -- The validated Investigation object: interpretation, root cause,
+    -- supporting and contradicting claims with their citations,
+    -- recommendation, limitations, insufficientEvidence.
+    investigation jsonb,
+    -- Which provider and model produced it. 'mock' means the offline path,
+    -- which is not model output and must be labelled as such wherever shown.
+    provider text,
+    model text,
+    -- Share of the response's citations that resolved to real evidence. 1 is
+    -- fully grounded; anything lower is a fabrication rate.
+    grounding_rate numeric,
     created_at timestamptz DEFAULT now()
 );
 
