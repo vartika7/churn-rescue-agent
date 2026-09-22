@@ -49,17 +49,47 @@ export interface GeminiConfig {
    * per-day free-tier quota. Raise it if root-cause quality turns out to need
    * it, and raise maxOutputTokens with it.
    */
-  thinkingBudget?: number;
-  /** Attempts for retryable failures (429, 5xx). 2 means one retry. */
+  thinkingBudget?: number | null;
+  /**
+   * Attempts for retryable failures. Defaults to 1 — no retry.
+   *
+   * Retrying looks obviously right and is wrong on this tier. The free quota
+   * is 20 requests per DAY and failed attempts count against it, so a batch of
+   * three accounts retrying a persistent 503 three times each spent nine
+   * requests, produced nothing, and exhausted the day. The 503s on this model
+   * last minutes rather than milliseconds, so no backoff short enough to sit
+   * inside a request outlives them.
+   *
+   * Raise it on a paid tier, where a retry costs a fraction of a cent instead
+   * of 5% of the day's budget.
+   */
   attempts?: number;
 }
 
-/** Reads config from the environment, or null when it is not configured. */
+/**
+ * Reads config from the environment, or null when it is not configured.
+ *
+ * GEMINI_THINKING_BUDGET accepts a token count, or "off" to omit the field
+ * entirely. Omitting matters: gemini-3.5-flash-lite rejects thinkingConfig
+ * outright with a bare "Request contains an invalid argument", so a provider
+ * that always sends it is not actually swappable between models.
+ */
 export function geminiConfigFromEnv(): GeminiConfig | null {
   const apiKey = process.env.GEMINI_API_KEY?.trim();
   const model = process.env.GEMINI_MODEL?.trim();
   if (!apiKey || !model) return null;
-  return { apiKey, model };
+
+  const raw = process.env.GEMINI_THINKING_BUDGET?.trim().toLowerCase();
+  const thinkingBudget =
+    raw === undefined || raw === ""
+      ? 0
+      : raw === "off" || raw === "none"
+        ? null
+        : Number.isFinite(Number(raw))
+          ? Number(raw)
+          : 0;
+
+  return { apiKey, model, thinkingBudget };
 }
 
 export class GeminiProvider implements InvestigationProvider {
@@ -73,7 +103,7 @@ export class GeminiProvider implements InvestigationProvider {
       model,
       timeoutMs = DEFAULT_TIMEOUT_MS,
       thinkingBudget = 0,
-      attempts = 2,
+      attempts = 1,
     } = this.config;
     // Key travels as a header, not a query string: query strings end up in
     // logs, proxies and error messages.
@@ -88,9 +118,10 @@ export class GeminiProvider implements InvestigationProvider {
         // verbose account does not truncate.
         maxOutputTokens: request.maxOutputTokens ?? 4096,
         responseMimeType: "application/json",
-        ...(thinkingBudget >= 0
-          ? { thinkingConfig: { thinkingBudget } }
-          : {}),
+        // null omits the field. Some models reject it outright.
+        ...(thinkingBudget === null
+          ? {}
+          : { thinkingConfig: { thinkingBudget } }),
       },
     };
 
@@ -138,7 +169,8 @@ export class GeminiProvider implements InvestigationProvider {
       }
 
       if (!lastError?.retryable || attempt === attempts) throw lastError;
-      await new Promise((r) => setTimeout(r, 750 * attempt));
+      const backoff = 750 * 2 ** (attempt - 1) + Math.random() * 400;
+      await new Promise((r) => setTimeout(r, backoff));
     }
 
     if (!res) throw lastError ?? new ProviderError("Gemini request failed");

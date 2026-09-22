@@ -34,22 +34,22 @@ Graded **11** stored investigations.
 | Escalated beyond the band | 4/11 | Not a failure; see below |
 | De-escalated below the band | 0/11 | Talking a CSM out of looking at a flagged account |
 | Uncertainty claimed correctly | 11/11 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 8.0 of ~12 available | A low number means it fixated on one signal |
+| Mean distinct evidence cited | 9.7 of ~12 available | A low number means it fixated on one signal |
 
 ### Per account
 
 | Account | Model | Valid | Grounding | Phantoms | Counter-case | Action | Band | Insufficient |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | C001 | offline-fixture | yes | 1.00 | none | used | monitor | medium (33) | no |
-| C002 | offline-fixture | yes | 1.00 | none | used | monitor | medium (26) | no |
+| C002 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
 | C003 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (16) ↑ | no |
 | C006 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | low (22) ↑ | no |
 | C007 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (0) ↑ | no |
 | C009 | gemini-3.5-flash | yes | 1.00 | none | used | no_action_needed | low (0) | no |
 | C011 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (23) ↑ | no |
-| C027 | offline-fixture | yes | 1.00 | none | used | monitor | medium (36) | no |
+| C027 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (36) | no |
 | C035 | offline-fixture | yes | 1.00 | none | used | intervene | high (70) | no |
-| C038 | offline-fixture | yes | 1.00 | none | used | intervene | high (61) | no |
+| C038 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (61) | no |
 | C049 | offline-fixture | yes | 1.00 | none | used | monitor | medium (26) | no |
 
 ### Where the model disagreed with the engine
@@ -87,8 +87,8 @@ tickets; it cannot read them. A ticket whose *status* is mild and whose
 
 | Model | Cases | Mean grounding | With phantoms |
 | --- | --- | --- | --- |
-| offline-fixture | 6 | 1.000 | 0 |
-| gemini-3.5-flash | 5 | 1.000 | 0 |
+| offline-fixture | 3 | 1.000 | 0 |
+| gemini-3.5-flash | 8 | 1.000 | 0 |
 
 ## Recommendation against the human grading
 

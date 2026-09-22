@@ -201,6 +201,18 @@ endpoint is the source of truth. A pinned version is used rather than the
 `gemini-flash-latest` alias so evaluation numbers stay attributable to a
 specific model.
 
+**`GEMINI_THINKING_BUDGET=off` omits the field entirely**, which some models
+require: `gemini-3.5-flash-lite` rejects `thinkingConfig` with a bare "Request
+contains an invalid argument". A provider that always sends it is not actually
+swappable between models, which is the sort of thing only a second model finds.
+
+**Retries are off by default**, which looks wrong and is not. The free quota is
+20 requests per day and failed attempts count against it, so three accounts
+retrying a persistent 503 three times each spent nine requests, produced
+nothing, and exhausted the day. These 503s last minutes, not milliseconds.
+Raise `attempts` on a paid tier where a retry costs a fraction of a cent rather
+than 5% of the daily budget.
+
 **Thinking is disabled** (`thinkingBudget: 0`). Not a tuning preference: those
 tokens are charged against `maxOutputTokens`, and left to the model's
 discretion a 2048 ceiling went 1532 to reasoning and 500 to output, truncating
