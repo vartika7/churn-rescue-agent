@@ -5,6 +5,7 @@ import { selectProvider } from "@/lib/investigation/factory";
 import {
   offlineInvestigation,
   runInvestigation,
+  shouldPersist,
 } from "@/lib/investigation/run";
 import {
   fetchCustomer,
@@ -54,13 +55,7 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customer")?.trim();
   const forceOffline = url.searchParams.get("offline") === "1";
-  // An offline result is a placeholder, not an investigation. Persisting one
-  // by default let a validation run supersede three real Gemini results and
-  // then silently inflate the Phase 7 metrics, because the offline provider
-  // builds its citations from the package and cannot fail a grounding check.
-  // Opt in with &save=1 if you genuinely want one stored.
   const saveParam = url.searchParams.get("save");
-  const persist = forceOffline ? saveParam === "1" : saveParam !== "0";
 
   if (!customerId) {
     return NextResponse.json({ error: "Pass ?customer=C001" }, { status: 400 });
@@ -106,7 +101,10 @@ export async function POST(request: Request) {
         ? offlineInvestigation(input)
         : await runInvestigation({ provider: choice.provider, input });
 
-    if (outcome.ok && persist) {
+    // An offline result is a placeholder, not an investigation, and is stored
+    // only when explicitly asked for — see shouldPersist.
+    const persist = shouldPersist(outcome, saveParam);
+    if (persist) {
       await saveInvestigation(customerId, outcome);
     }
 

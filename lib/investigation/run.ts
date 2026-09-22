@@ -119,6 +119,28 @@ export async function runInvestigation(
 }
 
 /**
+ * Whether a result should be written to `investigations`.
+ *
+ * Keyed on what the outcome actually is, not on why it happened. An earlier
+ * version checked the `--offline` flag, which missed the other route to an
+ * offline result entirely: when no provider is configured the app falls back
+ * to the placeholder silently, so a missing or expired key on a deployment
+ * would have quietly refilled the table with rows that are not
+ * investigations.
+ *
+ * A placeholder is stored only when asked for explicitly, and a failed
+ * outcome never is — an unvalidated response must not sit in the same table
+ * as verified ones.
+ */
+export function shouldPersist(
+  outcome: InvestigationOutcome,
+  saveParam: string | null,
+): outcome is Extract<InvestigationOutcome, { ok: true }> {
+  if (!outcome.ok) return false;
+  return outcome.offline ? saveParam === "1" : saveParam !== "0";
+}
+
+/**
  * Offline result for the same input, without going near a provider.
  *
  * Used when nothing is configured, so the UI has something real to render and
