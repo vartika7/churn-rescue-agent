@@ -5,6 +5,14 @@ import { assessActiveCustomers } from "@/lib/risk-store";
 export const dynamic = "force-dynamic";
 
 /**
+ * Scores all 40 active customers in one request, reading five tables first.
+ * Roughly a second and a half warm, but a cold function plus a cold database
+ * is a different number, so the limit is raised rather than left at whatever
+ * the platform defaults to.
+ */
+export const maxDuration = 60;
+
+/**
  * Re-runs the Phase 4 risk engine over every active customer and appends the
  * results to `risk_assessments`.
  *

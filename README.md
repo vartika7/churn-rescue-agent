@@ -688,6 +688,15 @@ reading six tables — roughly 1.5s, which is why the loading skeletons exist. I
 that ever needs improving, `revalidate` on the dashboard would be the first
 lever, not caching the customer pages.
 
+**The deployment does not need to generate investigations.** `npm run
+investigate` runs them in batches against a local server and writes to the same
+Supabase project; the deployed app only reads what is stored. That matters
+because a single investigation waits on a model producing several hundred
+tokens — double-digit seconds — which is past the default serverless function
+limit. Both routes set `maxDuration = 60`, but Vercel caps that to the plan's
+limit, so if `/api/investigate` times out in production the answer is to
+generate locally rather than to trim the model timeout.
+
 **Both POST routes are unauthenticated except for `ASSESS_TOKEN`.** There is no
 user login — this is a single-tenant internal tool, and the deployment is public
 only in the sense that the URL is guessable. Anything beyond a portfolio

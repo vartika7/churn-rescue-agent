@@ -19,6 +19,20 @@ import { getLatestRecordedDate } from "@/lib/time";
 export const dynamic = "force-dynamic";
 
 /**
+ * A single investigation waits on a model that generates several hundred
+ * tokens, which runs into double-digit seconds. That is comfortably past the
+ * default serverless function limit, so it is raised explicitly — Vercel caps
+ * this to whatever the plan allows, and the value below fits the Gemini
+ * client's own 30s timeout inside it rather than the other way round.
+ *
+ * Worth knowing: the deployed app does not need this route. Investigations are
+ * generated in batches by `npm run investigate` against a local server, and
+ * the deployment only reads what is already stored. If the plan's limit is too
+ * low, generating locally is the answer rather than trimming the timeout.
+ */
+export const maxDuration = 60;
+
+/**
  * Runs the Phase 5 investigation for one customer and appends the result.
  *
  * POST because it writes and costs money, token-guarded with the same
