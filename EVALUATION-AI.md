@@ -21,7 +21,7 @@ afterwards, which is the entire difference between grading and leaking.
 
 ## Results
 
-Graded **8** stored investigations from a real model.
+Graded **5** stored investigations from a real model.
 
 Offline placeholders are excluded. That provider composes its citations from
 the evidence package, so it scores a perfect grounding rate by construction and
@@ -30,72 +30,36 @@ with cases that cannot fail.
 
 | Metric | Result | What a failure would mean |
 | --- | --- | --- |
-| Structured-output validity | 8/8 | The response could not be parsed into the required shape |
-| Fully grounded | 8/8 (mean 1.000) | A citation pointed at evidence that was never supplied |
-| Free of phantom entities | 8/8 | A ticket id or date was named in prose but is absent from the package |
+| Structured-output validity | 5/5 | The response could not be parsed into the required shape |
+| Fully grounded | 5/5 (mean 1.000) | A citation pointed at evidence that was never supplied |
+| Free of phantom entities | 5/5 | A ticket id or date was named in prose but is absent from the package |
 | Uncited claims | 0 | A claim asserted with nothing behind it |
-| Engaged the counter-case | 8/8 | Contradicting evidence was available and ignored |
-| Aligned with the risk band | 4/8 | — |
-| Escalated beyond the band | 4/8 | Not a failure; see below |
-| De-escalated below the band | 0/8 | Talking a CSM out of looking at a flagged account |
-| Uncertainty claimed correctly | 8/8 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 11.4 of ~11 available | A low number means it fixated on one signal |
+| Engaged the counter-case | 5/5 | Contradicting evidence was available and ignored |
+| Aligned with the risk band | 5/5 | — |
+| Escalated beyond the band | 0/5 | Not a failure; see below |
+| De-escalated below the band | 0/5 | Talking a CSM out of looking at a flagged account |
+| Uncertainty claimed correctly | 5/5 | It invented a root cause on thin evidence, or refused on rich evidence |
+| Mean distinct evidence cited | 10.6 of ~12 available | A low number means it fixated on one signal |
 
 ### Per account
 
 | Account | Model | Valid | Grounding | Phantoms | Counter-case | Action | Band | Insufficient |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| C001 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (33) | no |
 | C002 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
-| C003 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (16) ↑ | no |
-| C006 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | low (22) ↑ | no |
-| C007 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (0) ↑ | no |
-| C009 | gemini-3.5-flash | yes | 1.00 | none | used | no_action_needed | low (0) | no |
-| C011 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | low (23) ↑ | no |
 | C027 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (36) | no |
+| C035 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (70) | no |
 | C038 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (61) | no |
-
-### Where the model disagreed with the engine
-
-The model recommended more urgency than the deterministic band on **4 of 8** accounts, and less on 0.
-
-| Account | Score | Band | Model said |
-| --- | --- | --- | --- |
-| C003 | 16 | low | monitor |
-| C006 | 22 | low | intervene |
-| C007 | 0 | low | monitor |
-| C011 | 23 | low | monitor |
-
-**This is not scored as error, and the reason matters.** Every escalation
-above is an account where signals fired but summed below the flag threshold.
-C006 is the clearest: an unresolved negative ticket, *"Dashboard taking 20-30
-seconds to load"*, open for two months, plus a mild historical decline. The
-engine scored those 8 and 6 — total 14, under the 25 needed to surface — and
-called the account low risk. The model read the ticket text, connected it to
-the decline, and said intervene.
-
-That is the same failure mode `EVALUATION.md` found independently by grading
-the engine against human labels: *the middle band is under-sensitive, and two
-minor signals at 8 points each total 16, under the 25 needed to surface*. Two
-evaluations built for different purposes landed on the same defect, which is
-better evidence than either alone.
-
-It is also the clearest argument for the layer existing. The engine counts
-tickets; it cannot read them. A ticket whose *status* is mild and whose
-*content* is severe is exactly the gap between the two.
-
-**De-escalations would be the worrying direction**, and there are none here. An escalation adds an account to a worklist and costs a CSM ten minutes; a de-escalation takes one off, and the cost of being wrong is a churn nobody looked at.
 
 ## Recommendation against the human grading
 
-Agreed on **3 of 8** (38%).
+Agreed on **3 of 5** (60%).
 
 | `expected_recommendation` | Model said | Accounts |
 | --- | --- | --- |
-| no_action_needed | monitor ← | 4 |
-| monitor | intervene ← | 1 |
-| no_action_needed | no_action_needed | 1 |
+| no_action_needed | monitor ← | 2 |
+| intervene | intervene | 2 |
 | monitor | monitor | 1 |
-| intervene | intervene | 1 |
 
 Disagreement is not automatically a model error. `expected_recommendation` was
 written with knowledge of the outcome; the model is blind to it by design, and
