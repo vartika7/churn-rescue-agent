@@ -661,12 +661,37 @@ on the real clock it needs no separate fix.
 ## Deployment (Vercel)
 
 1. Push to GitHub.
-2. Vercel → Import Project → select the repo. Next.js is auto-detected.
-3. Add `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` under Settings →
-   Environment Variables. The deployed app needs these separately from
-   `.env.local`.
-4. Pushes to `main` auto-redeploy. Supabase data changes need no redeploy — just
+2. Vercel → Import Project → select the repo. Next.js is auto-detected; the
+   default build command and output settings are correct, and no `vercel.json`
+   is needed.
+3. Add the environment variables under Settings → Environment Variables. The
+   deployed app cannot see `.env.local`.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `SUPABASE_URL` | yes | the app renders a setup message without it rather than crashing |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | server-only; never prefix with `NEXT_PUBLIC_` |
+| `ASSESS_TOKEN` | yes | guards both POST routes. **Unset disables them**, which fails closed rather than leaving them open |
+| `GEMINI_API_KEY` | no | without it, investigations fall back to the offline path and are not stored |
+| `GEMINI_MODEL` | with the key | deliberately not defaulted — model names change and a stale default 404s at request time |
+| `GEMINI_THINKING_BUDGET` | no | `off` omits the field, which some models require |
+
+4. Node 22 is pinned in `package.json` `engines` and `.nvmrc`, both of which
+   Vercel reads. `@supabase/supabase-js` warns on Node 20.
+5. Pushes to `main` auto-redeploy. Supabase data changes need no redeploy — just
    a refresh.
+
+**Every page is `force-dynamic`, so nothing is cached.** That is deliberate: a
+CSM triaging accounts needs the current state, and a stale worklist is worse
+than a slow one. The cost is that each page view is a serverless invocation
+reading six tables — roughly 1.5s, which is why the loading skeletons exist. If
+that ever needs improving, `revalidate` on the dashboard would be the first
+lever, not caching the customer pages.
+
+**Both POST routes are unauthenticated except for `ASSESS_TOKEN`.** There is no
+user login — this is a single-tenant internal tool, and the deployment is public
+only in the sense that the URL is guessable. Anything beyond a portfolio
+deployment needs real auth before it holds real customer data.
 
 Supabase free tier auto-pauses after roughly a week of inactivity. Open the
 dashboard once before any presentation, or expect to un-pause it manually.
@@ -684,10 +709,14 @@ Set Node 22 in Vercel's project settings regardless.
   unqueried. The investigation already produces a recommended action; what is
   missing is the approve / edit / reject flow and the drafted message. Nothing
   is ever sent automatically.
-- Three of the six flagged accounts (C038, C027, C049) have no live
-  investigation yet — the free tier is 20 requests per day per model and it was
-  spent. Their stored investigations are from the offline provider and are
-  labelled as such.
+- C049 has no live investigation yet — the free tier is 20 requests per day per
+  model. One run covers it.
+- No user authentication. Single-tenant internal tool; the POST routes are
+  token-guarded and the pages are not guarded at all.
+- A missing customer renders the not-found page but returns HTTP 200, because
+  `force-dynamic` streaming flushes the response shell before `notFound()`
+  throws. Browsers show the right page; a crawler or uptime check would see a
+  200. Not worth giving up dynamic rendering for.
 - Phase 8 deployment. Nothing is on Vercel yet — it needs `SUPABASE_URL`,
   `SUPABASE_SERVICE_ROLE_KEY` and `ASSESS_TOKEN` set in project settings.
 - Phase 7 acts on its own findings. The harness reports that the middle band is
