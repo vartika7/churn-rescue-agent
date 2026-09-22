@@ -38,6 +38,7 @@ If either is missing the pages render a setup message instead of crashing.
 | `npm test`          | Unit tests — engine, harness, dates, display (no database) |
 | `npm run evaluate`  | Grade the engine against the seed, write `EVALUATION.md` |
 | `npm run investigate` | Investigate flagged accounts (needs the app running) |
+| `npm run evaluate:ai` | Grade stored investigations, write `EVALUATION-AI.md` |
 
 ## Structure
 
@@ -59,6 +60,7 @@ components/
 lib/
   risk-engine.ts           Phase 4 scoring: signals, points, level, confidence
   evaluation.ts            Phase 7 grading; the only module reading outcomes
+  ai-evaluation.ts         Phase 7 grading of the AI layer
   investigation/
     evidence.ts            The only thing the model sees; no outcome field
     schema.ts              Structured output + grounding validation
@@ -86,6 +88,7 @@ supabase/
 scripts/
   export-seed.mjs          Re-export seed.sql + CSVs from the live database
   evaluate.ts              Grade the engine, write EVALUATION.md
+  evaluate-ai.ts           Grade stored investigations, write EVALUATION-AI.md
   investigate.ts           Investigate flagged accounts; quota-aware
 test/
   helpers.ts               Synthetic fixture builders — no database
@@ -94,6 +97,7 @@ test/
   time.test.ts             The two date reference points
   risk-display.test.ts     Past-tense rule for churned accounts
 EVALUATION.md              Generated: how good is the engine?
+EVALUATION-AI.md           Generated: how good is the investigation layer?
 ```
 
 ### Tests
@@ -233,6 +237,52 @@ saved (`investigation jsonb`, `provider text`, `model text`, `grounding_rate
 numeric`) — see `supabase/schema.sql`. Until then reads return "no
 investigation yet" rather than breaking the page: the deterministic score is
 the product and must not depend on this layer.
+
+### Evaluating the AI layer
+
+`npm run evaluate:ai` grades investigations already stored in `investigations`,
+so it spends no quota and every number refers to a response that actually
+happened. Results in `EVALUATION-AI.md`.
+
+Only mechanically checkable things are measured: structured-output validity,
+whether every citation resolves, whether the prose names ticket ids or dates
+absent from the package, whether the counter-case was engaged, and whether
+uncertainty was claimed where the record was thin.
+
+**There is deliberately no root-cause accuracy score.** `expected_root_cause`
+exists, but scoring prose against prose by string similarity produces a number
+that tracks phrasing rather than correctness, and a metric that looks rigorous
+while measuring nothing is worse than an admitted gap.
+
+Current results across 11 stored investigations: 11/11 valid shape, 11/11
+fully grounded, **0 phantom entities, 0 uncited claims**, 11/11 engaged the
+counter-case, 11/11 claimed uncertainty correctly.
+
+**The most useful finding is a disagreement.** The model recommended more
+urgency than the deterministic band on 4 accounts and less on **0**. Every
+escalation is an account where signals fired but summed below the flag
+threshold — C006 clearest of all: an unresolved negative ticket, *"Dashboard
+taking 20-30 seconds to load"*, open two months, plus a mild decline. The
+engine scored those 8 and 6, total 14, under the 25 needed to surface, and
+called it low risk. The model read the ticket text and said intervene.
+
+That is the same defect `EVALUATION.md` found independently by grading the
+engine against human labels — the middle band is under-sensitive. Two
+harnesses built for different purposes landing on the same weakness is better
+evidence than either alone, and it is the clearest argument for the layer
+existing: the engine counts tickets, it cannot read them.
+
+Zero de-escalations is the safety result. An escalation adds an account to a
+worklist and costs ten minutes; a de-escalation removes one, and the cost of
+being wrong is a churn nobody looked at.
+
+The adversarial suite in `test/ai-evaluation.test.ts` is the part that
+generalises to a model nobody has run yet: fabricated citations, a phantom
+ticket named in prose *with clean citations beside it*, uncited claims,
+invented actions, and a root cause asserted on 38 days of data are each proven
+to be caught. Verified by mutation — disabling the phantom detector, collapsing
+de-escalation into escalation, or always reporting the counter-case as used
+each produce failures.
 
 ### Keeping the dataset aligned
 
@@ -546,9 +596,10 @@ Set Node 22 in Vercel's project settings regardless.
   unqueried. The investigation already produces a recommended action; what is
   missing is the approve / edit / reject flow and the drafted message. Nothing
   is ever sent automatically.
-- Phase 5 has never run against a real model. The pipeline, validation and UI
-  are complete and tested against the offline provider; a live run needs
-  `GEMINI_API_KEY` and `GEMINI_MODEL`.
+- Three of the six flagged accounts (C038, C027, C049) have no live
+  investigation yet — the free tier is 20 requests per day per model and it was
+  spent. Their stored investigations are from the offline provider and are
+  labelled as such.
 - Phase 8 deployment. Nothing is on Vercel yet — it needs `SUPABASE_URL`,
   `SUPABASE_SERVICE_ROLE_KEY` and `ASSESS_TOKEN` set in project settings.
 - Phase 7 acts on its own findings. The harness reports that the middle band is
