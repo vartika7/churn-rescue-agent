@@ -19,12 +19,31 @@
 -- running it again later shifts by whatever the new drift is, and running it
 -- twice in a row does nothing the second time.
 --
+-- WHEN TO RUN IT: shortly before a demo, not routinely. Everything derived
+-- from the data goes stale the moment the dates move, and restoring that
+-- alignment costs Gemini quota (20 requests per day, per model).
+--
 -- AFTER RUNNING THIS:
 --   1. Re-run the seed export so the committed snapshot matches (the repo's
 --      supabase/seed.sql and supabase/seed/*.csv are now stale).
 --   2. Re-run POST /api/assess. Stored risk_assessments were computed against
 --      the old dates; their created_at is a real audit timestamp and is
 --      deliberately NOT shifted, so old rows would misrepresent when they ran.
+--   3. Re-run `npm run investigate`. Stored investigations cite evidence from
+--      the old window — "13 silent days in the last 30" describes a window
+--      that has moved, and the dates quoted in their prose no longer match the
+--      account. Grounding is still checked against ids rather than dates, so
+--      `npm run evaluate:ai` will not catch this; the rows read as fine and
+--      quietly describe the wrong period. Use --force, since the script skips
+--      accounts that already have a live investigation.
+--   4. Re-run `npm run evaluate` and `npm run evaluate:ai` so both reports
+--      describe the shifted dataset.
+--
+-- WHAT IT DOES NOT DO: it never changes `customer_outcomes.outcome`, so no
+-- account moves between the active worklist and Lost. A renewal date passing
+-- is not churn — it means the renewal came due, and a retained account simply
+-- renewed. Deriving churn from "renewal_date < today" would tell a CSM that a
+-- customer who just renewed had left.
 
 DO $$
 DECLARE
