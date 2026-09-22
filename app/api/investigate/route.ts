@@ -54,7 +54,13 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customer")?.trim();
   const forceOffline = url.searchParams.get("offline") === "1";
-  const persist = url.searchParams.get("save") !== "0";
+  // An offline result is a placeholder, not an investigation. Persisting one
+  // by default let a validation run supersede three real Gemini results and
+  // then silently inflate the Phase 7 metrics, because the offline provider
+  // builds its citations from the package and cannot fail a grounding check.
+  // Opt in with &save=1 if you genuinely want one stored.
+  const saveParam = url.searchParams.get("save");
+  const persist = forceOffline ? saveParam === "1" : saveParam !== "0";
 
   if (!customerId) {
     return NextResponse.json({ error: "Pass ?customer=C001" }, { status: 400 });

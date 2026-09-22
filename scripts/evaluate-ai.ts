@@ -36,6 +36,15 @@ import type {
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const DRY = process.argv.includes("--dry");
+/**
+ * Offline rows are excluded by default.
+ *
+ * The offline provider composes its citations from the evidence package, so
+ * it scores a perfect grounding rate by construction and can never produce a
+ * phantom entity. Including it does not measure a model; it pads the
+ * denominator with cases that cannot fail.
+ */
+const INCLUDE_OFFLINE = process.argv.includes("--include-offline");
 
 const env: Record<string, string> = {};
 for (const line of readFileSync(join(ROOT, ".env.local"), "utf8").split("\n")) {
@@ -128,7 +137,18 @@ function render(report: AiEvaluationReport): string {
 
   p("## Results");
   p();
-  p(`Graded **${t.graded}** stored investigations.`);
+  p(`Graded **${t.graded}** stored investigations from a real model.`);
+  p();
+  p(
+    "Offline placeholders are excluded. That provider composes its citations from",
+  );
+  p(
+    "the evidence package, so it scores a perfect grounding rate by construction and",
+  );
+  p(
+    "can never produce a phantom entity — including it would pad the denominator",
+  );
+  p("with cases that cannot fail.");
   p();
   p("| Metric | Result | What a failure would mean |");
   p("| --- | --- | --- |");
@@ -336,9 +356,14 @@ function render(report: AiEvaluationReport): string {
   }
 
   const inputs: GradeInput[] = [];
+  let offlineSkipped = 0;
   for (const row of latest.values()) {
     const customer = custBy.get(row.customer_id);
     if (!customer) continue;
+    if (row.provider === "mock" && !INCLUDE_OFFLINE) {
+      offlineSkipped++;
+      continue;
+    }
     const u = (usageBy.get(row.customer_id) ?? [])
       .slice()
       .sort((a, b) => a.date.localeCompare(b.date));
@@ -372,7 +397,12 @@ function render(report: AiEvaluationReport): string {
   const report = evaluateAi(inputs);
   const t = report.totals;
 
-  console.log(`graded ${t.graded} stored investigations`);
+  console.log(
+    `graded ${t.graded} stored investigations` +
+      (offlineSkipped
+        ? ` (${offlineSkipped} offline placeholder${offlineSkipped === 1 ? "" : "s"} excluded; --include-offline to see them)`
+        : ""),
+  );
   console.log(`  valid shape        ${t.valid}/${t.graded}`);
   console.log(
     `  fully grounded     ${t.fullyGrounded}/${t.valid} (mean ${t.meanGrounding.toFixed(3)})`,
