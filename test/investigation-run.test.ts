@@ -11,6 +11,7 @@ import {
 import {
   offlineInvestigation,
   runInvestigation,
+  shouldPersist,
 } from "../lib/investigation/run";
 import { stripFence } from "../lib/investigation/schema";
 import { scoreCustomer } from "../lib/risk-engine";
@@ -192,6 +193,50 @@ describe("offline path", () => {
   test("needs no provider at all", () => {
     // The point of this path: the pipeline runs with nothing configured.
     assert.doesNotThrow(() => offlineInvestigation(input));
+  });
+});
+
+describe("what gets written to the database", () => {
+  // A placeholder must never quietly become an account's stored answer. The
+  // first version of this guard keyed on the --offline flag, which missed the
+  // other route to an offline result: when no provider is configured the app
+  // falls back silently, so a missing or expired key on a deployment would
+  // have refilled the table with rows that are not investigations.
+  test("an offline result is not stored by default", () => {
+    const outcome = offlineInvestigation(input);
+    assert.equal(shouldPersist(outcome, null), false);
+    assert.equal(shouldPersist(outcome, "0"), false);
+  });
+
+  test("an offline result is stored only when asked for explicitly", () => {
+    assert.equal(shouldPersist(offlineInvestigation(input), "1"), true);
+  });
+
+  test("a real result is stored by default", async () => {
+    const signal = input.assessment.signals[0].key;
+    const body = JSON.stringify({
+      riskInterpretation: "Engagement has fallen away.",
+      rootCause: { hypothesis: "Disengagement.", confidence: "medium", citations: [signal] },
+      supporting: [{ statement: "Sessions down.", citations: [signal] }],
+      contradicting: [],
+      recommendation: { action: "intervene", reasoning: "Reach out.", citations: [signal] },
+      limitations: "No CRM notes.",
+      insufficientEvidence: false,
+    });
+    const outcome = await runInvestigation({ provider: canned(body), input });
+    assert.equal(outcome.ok, true);
+    assert.equal(shouldPersist(outcome, null), true);
+    assert.equal(shouldPersist(outcome, "0"), false, "save=0 still opts out");
+  });
+
+  test("a failed result is never stored", async () => {
+    const outcome = await runInvestigation({
+      provider: new FailingProvider("down"),
+      input,
+    });
+    // Storing an unvalidated response would put unverified claims in the same
+    // table as verified ones.
+    assert.equal(shouldPersist(outcome, "1"), false);
   });
 });
 

@@ -5,6 +5,7 @@ import { selectProvider } from "@/lib/investigation/factory";
 import {
   offlineInvestigation,
   runInvestigation,
+  shouldPersist,
 } from "@/lib/investigation/run";
 import {
   fetchCustomer,
@@ -31,6 +32,18 @@ export const dynamic = "force-dynamic";
  * Deliberately one customer per request. Investigating all 40 in one call
  * would sit far past any sane serverless timeout, and a partial failure
  * halfway through a batch is worse than 40 independent outcomes.
+ *
+ * NO DEDUPLICATION, also deliberately. Every accepted call appends a row, even
+ * if the account was investigated a minute ago. This route is the mechanism;
+ * which accounts to investigate and how often is policy, and it lives in
+ * scripts/investigate.ts — the same split that keeps `scoreCustomer` free of
+ * any opinion about which customers to score.
+ *
+ * Re-running is a real use: after a prompt change, after the dataset shifts,
+ * or to compare two models on one account. A route that refused would need a
+ * bypass flag and end up back here with more code. The consequence to know is
+ * that calling this in a loop will spend the day's quota, so batch through the
+ * script, which skips accounts that already have a live investigation.
  */
 export async function POST(request: Request) {
   const expected = process.env.ASSESS_TOKEN;
@@ -54,13 +67,7 @@ export async function POST(request: Request) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get("customer")?.trim();
   const forceOffline = url.searchParams.get("offline") === "1";
-  // An offline result is a placeholder, not an investigation. Persisting one
-  // by default let a validation run supersede three real Gemini results and
-  // then silently inflate the Phase 7 metrics, because the offline provider
-  // builds its citations from the package and cannot fail a grounding check.
-  // Opt in with &save=1 if you genuinely want one stored.
   const saveParam = url.searchParams.get("save");
-  const persist = forceOffline ? saveParam === "1" : saveParam !== "0";
 
   if (!customerId) {
     return NextResponse.json({ error: "Pass ?customer=C001" }, { status: 400 });
@@ -106,7 +113,10 @@ export async function POST(request: Request) {
         ? offlineInvestigation(input)
         : await runInvestigation({ provider: choice.provider, input });
 
-    if (outcome.ok && persist) {
+    // An offline result is a placeholder, not an investigation, and is stored
+    // only when explicitly asked for — see shouldPersist.
+    const persist = shouldPersist(outcome, saveParam);
+    if (persist) {
       await saveInvestigation(customerId, outcome);
     }
 

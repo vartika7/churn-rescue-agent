@@ -369,7 +369,21 @@ construction. It computes its own offset and is a no-op when already aligned.
 
 Run it a few days before any demo rather than months ahead: renewals sit within
 30 days of the data end, so the picture is good for roughly a fortnight after a
-shift and degrades after that.
+shift and degrades after that. As of 2026-09-22, 4 active accounts show an
+overdue renewal and 16 more are inside the 14-day amber window — half the book
+reading as urgent is the drift, not a bug.
+
+**A passed renewal is not churn.** The active/Lost split reads
+`customer_outcomes.outcome` and nothing else. A retained account whose renewal
+date has gone by simply renewed; in a real system the date would roll forward
+to the next term. Inferring churn from `renewal_date < today` would tell a CSM
+that a customer who just renewed had left, which is the worst mistake a
+retention tool can make.
+
+Shifting also invalidates everything derived from the dates — stored
+assessments and investigations both describe windows that have moved — so it
+costs Gemini quota to restore. `shift_dates.sql` lists the four follow-up
+steps.
 
 `git status` cannot tell you the seed has gone stale, because the drift lives in
 Supabase rather than the working tree. `export-seed.mjs` parses everything it
