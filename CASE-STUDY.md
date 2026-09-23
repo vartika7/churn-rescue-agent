@@ -291,6 +291,13 @@ It is also why the UI shows every claim's citations inline: the CSM is expected
 to check, and the interface is designed to make checking take seconds rather
 than requiring them to trust it.
 
+**The attribution is not proof, and should not be read as it.** `decided_by`
+records who a decision was submitted under, and nothing verifies it — there is
+no user authentication, only a shared token on the endpoint. So the column is a
+label. Anything running for real would need per-user auth before that field
+could carry an audit claim, and the distinction matters precisely because the
+human-in-the-loop story is the part a reviewer will lean on hardest.
+
 ---
 
 ## Rollout

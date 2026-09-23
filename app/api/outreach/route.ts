@@ -65,6 +65,13 @@ export async function POST(request: Request) {
     if (!by) {
       // A decision with nobody attached to it is not a human-in-the-loop
       // record, it is an audit gap.
+      //
+      // But `by` is UNVERIFIED, and that is the larger gap. There is no user
+      // authentication here — only the shared ASSESS_TOKEN — so anyone holding
+      // the token can record a decision under any name. `decided_by` is
+      // therefore a label, not proof, and the human-in-the-loop guarantee is
+      // only as strong as whoever holds that token. Real use needs real auth
+      // before this column can be treated as an audit record.
       return NextResponse.json(
         { error: "pass &by=<name> — a decision needs a person attached" },
         { status: 400 },
