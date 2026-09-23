@@ -57,6 +57,7 @@ app/
   customer/[id]/page.tsx   Customer detail (Server Component)
   api/assess/route.ts      POST re-scores active customers; token-guarded
   api/investigate/route.ts POST investigates one customer; token-guarded
+  api/outreach/route.ts    POST drafts a message, or records a decision
   globals.css              Design tokens, light palette
 components/
   CustomerTable.tsx        'use client' — sort / filter / search
@@ -64,6 +65,7 @@ components/
   Sparkline.tsx            Sessions over the final 90 days on record
   EvidencePanel.tsx        Engine signals split by direction
   InvestigationPanel.tsx   AI investigation with inline citations
+  OutreachPanel.tsx        Draft, decision, and the "not sent" statement
   PrototypeNote.tsx        Placeholder-data labelling
   SetupError.tsx           Readable credentials / connection failure
 lib/
@@ -79,7 +81,11 @@ lib/
     factory.ts             Provider selection from the environment
     mock.ts                Offline provider — not an investigation
     run.ts                 Orchestration: package -> provider -> validate
+  outreach/
+    schema.ts              Draft shape; blocks score leaks and promises
+    run.ts                 Drafting from a validated investigation
   investigation-store.ts   Appends investigations; degrades if unmigrated
+  outreach-store.ts        Appends drafts; keeps the CSM's edit separate
   risk-store.ts            Persists assessments; active customers only
   risk-display.ts          Engine output → badges and labels
   supabase.ts              Server-only client + paginated `selectAll`
@@ -105,6 +111,8 @@ test/
   evaluation.test.ts       The harness's own metric maths
   time.test.ts             The two date reference points
   risk-display.test.ts     Past-tense rule for churned accounts
+  investigation.test.ts    Leakage, grounding, adversarial responses
+  outreach.test.ts         Score leaks, unauthorised promises, edit distance
 CASE-STUDY.md              The reasoning: architecture, evaluation, failure modes
 EVALUATION.md              Generated: how good is the engine?
 EVALUATION-AI.md           Generated: how good is the investigation layer?
@@ -112,8 +120,9 @@ EVALUATION-AI.md           Generated: how good is the investigation layer?
 
 ### Tests
 
-`npm test` runs `node:test` through `tsx`, 89 cases over the risk engine, the
-Phase 7 harness, the two date reference points and the display helpers. No database, no network, no
+`npm test` runs `node:test` through `tsx`, 180 cases over the risk engine, the
+two evaluation harnesses, the investigation and outreach layers, the two date
+reference points and the display helpers. No database, no network, no
 seed file: every fixture is built in `test/helpers.ts`.
 
 That is deliberate. The signal bands are step functions, so a test asserting
@@ -316,9 +325,9 @@ exists, but scoring prose against prose by string similarity produces a number
 that tracks phrasing rather than correctness, and a metric that looks rigorous
 while measuring nothing is worse than an admitted gap.
 
-Current results across 8 real investigations: 8/8 valid shape, 8/8 fully
-grounded, **0 phantom entities, 0 uncited claims**, 8/8 engaged the
-counter-case, 8/8 claimed uncertainty correctly.
+Current results across all 6 flagged accounts: 6/6 valid shape, 6/6 fully
+grounded, **0 phantom entities, 0 uncited claims**, 6/6 engaged the
+counter-case, 6/6 claimed uncertainty correctly.
 
 **Offline placeholders are excluded from these numbers**, and the reason is a
 bug worth recording. An `--offline` validation run persisted six rows, three of
@@ -718,8 +727,8 @@ Set Node 22 in Vercel's project settings regardless.
   unqueried. The investigation already produces a recommended action; what is
   missing is the approve / edit / reject flow and the drafted message. Nothing
   is ever sent automatically.
-- C049 has no live investigation yet — the free tier is 20 requests per day per
-  model. One run covers it.
+- No component or end-to-end tests beyond the unit suite; the pages are
+  verified by eye and by smoke-testing the deployed routes.
 - No user authentication. Single-tenant internal tool; the POST routes are
   token-guarded and the pages are not guarded at all.
 - A missing customer renders the not-found page but returns HTTP 200, because

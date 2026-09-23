@@ -205,12 +205,12 @@ quota and every number describes a response that really happened.
 
 |                               |       |
 | ----------------------------- | ----- |
-| Valid structured output       | 5 / 5 |
-| Fully grounded                | 5 / 5 |
+| Valid structured output       | 6 / 6 |
+| Fully grounded                | 6 / 6 |
 | Phantom entities              | **0** |
 | Uncited claims                | **0** |
-| Engaged the counter-case      | 5 / 5 |
-| Uncertainty claimed correctly | 5 / 5 |
+| Engaged the counter-case      | 6 / 6 |
+| Uncertainty claimed correctly | 6 / 6 |
 
 **There is deliberately no root-cause accuracy score.** The dataset contains
 `expected_root_cause`, and scoring prose against prose by string similarity
@@ -357,11 +357,12 @@ restated the evidence list would score perfectly. The offline provider exists
 partly to make that visible: it scores well and is deliberately not an
 investigation.
 
-**The provider abstraction is unproven.** The architecture is model-agnostic
-and has only ever run Gemini. An attempt at a second model surfaced a real
-portability bug — it rejected a config field that was being sent
-unconditionally — which was fixed, but no second model has produced a complete
-investigation.
+**The provider abstraction is half proven.** A second model,
+`gemini-3.5-flash-lite`, now produces complete validated outreach drafts — and
+could not before. The attempt surfaced a real portability bug: a config field
+sent unconditionally that this model rejects outright, which is what made the
+abstraction actually swappable rather than nominally so. It has still never
+produced an *investigation*, so the claim holds for one of the two call types.
 
 ---
 

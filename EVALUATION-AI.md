@@ -21,7 +21,7 @@ afterwards, which is the entire difference between grading and leaking.
 
 ## Results
 
-Graded **5** stored investigations from a real model.
+Graded **6** stored investigations from a real model.
 
 Offline placeholders are excluded. That provider composes its citations from
 the evidence package, so it scores a perfect grounding rate by construction and
@@ -30,16 +30,16 @@ with cases that cannot fail.
 
 | Metric | Result | What a failure would mean |
 | --- | --- | --- |
-| Structured-output validity | 5/5 | The response could not be parsed into the required shape |
-| Fully grounded | 5/5 (mean 1.000) | A citation pointed at evidence that was never supplied |
-| Free of phantom entities | 5/5 | A ticket id or date was named in prose but is absent from the package |
+| Structured-output validity | 6/6 | The response could not be parsed into the required shape |
+| Fully grounded | 6/6 (mean 1.000) | A citation pointed at evidence that was never supplied |
+| Free of phantom entities | 6/6 | A ticket id or date was named in prose but is absent from the package |
 | Uncited claims | 0 | A claim asserted with nothing behind it |
-| Engaged the counter-case | 5/5 | Contradicting evidence was available and ignored |
-| Aligned with the risk band | 5/5 | — |
-| Escalated beyond the band | 0/5 | Not a failure; see below |
-| De-escalated below the band | 0/5 | Talking a CSM out of looking at a flagged account |
-| Uncertainty claimed correctly | 5/5 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 10.6 of ~12 available | A low number means it fixated on one signal |
+| Engaged the counter-case | 6/6 | Contradicting evidence was available and ignored |
+| Aligned with the risk band | 6/6 | — |
+| Escalated beyond the band | 0/6 | Not a failure; see below |
+| De-escalated below the band | 0/6 | Talking a CSM out of looking at a flagged account |
+| Uncertainty claimed correctly | 6/6 | It invented a root cause on thin evidence, or refused on rich evidence |
+| Mean distinct evidence cited | 10.7 of ~12 available | A low number means it fixated on one signal |
 
 ### Per account
 
@@ -50,14 +50,15 @@ with cases that cannot fail.
 | C027 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (36) | no |
 | C035 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (70) | no |
 | C038 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (61) | no |
+| C049 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
 
 ## Recommendation against the human grading
 
-Agreed on **3 of 5** (60%).
+Agreed on **3 of 6** (50%).
 
 | `expected_recommendation` | Model said | Accounts |
 | --- | --- | --- |
-| no_action_needed | monitor ← | 2 |
+| no_action_needed | monitor ← | 3 |
 | intervene | intervene | 2 |
 | monitor | monitor | 1 |
 
