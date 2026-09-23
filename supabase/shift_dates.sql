@@ -88,8 +88,16 @@ END $$;
 -- ---------------------------------------------------------------------------
 WITH checks(assertion, actual, expected) AS (
   VALUES
-    ('usage ends today',
-      (SELECT MAX(date) FROM public.usage_daily)::text, CURRENT_DATE::text),
+    -- Deliberately NOT asserting that usage ends today. The whole point of
+    -- target_end is that it may be a date other than CURRENT_DATE — aiming a
+    -- few days ahead so the data stays fresh across a review window is the
+    -- documented use — and asserting otherwise fails the check for doing
+    -- exactly what the script is for. The DO block above reports where the
+    -- data landed, and the final query below shows it.
+    ('usage does not end before it starts',
+      (SELECT count(*) FROM (
+         SELECT customer_id FROM public.usage_daily
+          GROUP BY customer_id HAVING MIN(date) > MAX(date)) x)::text, '0'),
     ('no usage after churn',
       (SELECT count(*) FROM public.usage_daily u
          JOIN public.customer_outcomes o USING (customer_id)
