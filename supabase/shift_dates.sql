@@ -71,14 +71,34 @@ BEGIN
     RAISE NOTICE 'Shifting every date by % days (% -> %).',
         shift_days, current_end, target_end;
 
+    -- Shifted in two hops, via a date range nothing occupies.
+    --
+    -- usage_daily has a UNIQUE (customer_id, date) constraint, and a single
+    -- `date = date + n` violates it: the row moving to D+n collides with the
+    -- row already sitting at D+n, which has not moved yet. Postgres checks the
+    -- constraint per row as the update proceeds, so there is no ordering that
+    -- avoids this and ORDER BY is not available on UPDATE anyway.
+    --
+    -- Moving everything roughly 274 years out first empties the original range
+    -- entirely, so the second hop lands on free dates. Both hops move every
+    -- row by the same amount, so the rows stay unique among themselves
+    -- throughout. Applied to every table rather than just usage_daily, because
+    -- it costs nothing and does not depend on knowing which constraints exist.
     UPDATE public.customers
-       SET signup_date  = signup_date  + shift_days,
-           renewal_date = renewal_date + shift_days;
+       SET signup_date  = signup_date  + 100000,
+           renewal_date = renewal_date + 100000;
+    UPDATE public.usage_daily       SET date         = date         + 100000;
+    UPDATE public.support_tickets   SET date         = date         + 100000;
+    UPDATE public.subscriptions     SET date         = date         + 100000;
+    UPDATE public.customer_outcomes SET outcome_date = outcome_date + 100000;
 
-    UPDATE public.usage_daily       SET date         = date         + shift_days;
-    UPDATE public.support_tickets   SET date         = date         + shift_days;
-    UPDATE public.subscriptions     SET date         = date         + shift_days;
-    UPDATE public.customer_outcomes SET outcome_date = outcome_date + shift_days;
+    UPDATE public.customers
+       SET signup_date  = signup_date  - 100000 + shift_days,
+           renewal_date = renewal_date - 100000 + shift_days;
+    UPDATE public.usage_daily       SET date         = date         - 100000 + shift_days;
+    UPDATE public.support_tickets   SET date         = date         - 100000 + shift_days;
+    UPDATE public.subscriptions     SET date         = date         - 100000 + shift_days;
+    UPDATE public.customer_outcomes SET outcome_date = outcome_date - 100000 + shift_days;
 
     RAISE NOTICE 'Done. Re-export the seed and re-run the risk assessments.';
 END $$;
