@@ -39,18 +39,18 @@ with cases that cannot fail.
 | Escalated beyond the band | 0/6 | Not a failure; see below |
 | De-escalated below the band | 0/6 | Talking a CSM out of looking at a flagged account |
 | Uncertainty claimed correctly | 6/6 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 10.7 of ~12 available | A low number means it fixated on one signal |
+| Mean distinct evidence cited | 9.7 of ~12 available | A low number means it fixated on one signal |
 
 ### Per account
 
 | Account | Model | Valid | Grounding | Phantoms | Counter-case | Action | Band | Insufficient |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C001 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (33) | no |
-| C002 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
-| C027 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (36) | no |
-| C035 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (70) | no |
-| C038 | gemini-3.5-flash | yes | 1.00 | none | used | intervene | high (61) | no |
-| C049 | gemini-3.5-flash | yes | 1.00 | none | used | monitor | medium (26) | no |
+| C001 | gemini-3.5-flash-lite | yes | 1.00 | none | used | monitor | medium (33) | no |
+| C002 | gemini-3.5-flash-lite | yes | 1.00 | none | used | monitor | medium (26) | no |
+| C027 | gemini-3.5-flash-lite | yes | 1.00 | none | used | monitor | medium (36) | no |
+| C035 | gemini-3.5-flash-lite | yes | 1.00 | none | used | intervene | high (70) | no |
+| C038 | gemini-3.5-flash-lite | yes | 1.00 | none | used | intervene | high (61) | no |
+| C049 | gemini-3.5-flash-lite | yes | 1.00 | none | used | monitor | medium (26) | no |
 
 ## Recommendation against the human grading
 

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Churn Rescue">
+  <!--
+    A declining usage line with its final point flagged: the product in one
+    mark. Drawn for 16px first — three segments and one dot, nothing smaller
+    than a 2px stroke, because anything finer disappears in a browser tab.
+
+    Colours are the app's own tokens: --text for the ground, --intervene for
+    the flagged point. A solid ground rather than a transparent one so it holds
+    up against both light and dark browser chrome.
+  -->
+  <rect width="32" height="32" rx="7" fill="#1a2230" />
+  <polyline
+    points="7,10 13,15 19,13 24,21"
+    fill="none"
+    stroke="#ffffff"
+    stroke-width="2.6"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <circle cx="24" cy="21" r="3.4" fill="#c43d33" />
+</svg>

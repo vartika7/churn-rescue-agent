@@ -1,51 +1,51 @@
 customer_id,company,plan,mrr,signup_date,renewal_date,industry,company_size
-C001,Ironclad Solutions,Pro,305,2026-04-27,2026-09-25,Manufacturing,501-1000
-C002,Harbor Solutions,Growth,225,2026-04-21,2026-10-20,Telecommunications,251-500
-C003,Silverline Analytics,Growth,110,2026-03-16,2026-09-23,FinTech,101-250
-C004,Copper Collective,Growth,90,2026-04-02,2026-10-02,Logistics,501-1000
-C005,Pacific Industries,Pro,580,2026-01-10,2026-06-30,Nonprofit,1-50
-C006,River Solutions,Growth,110,2026-04-19,2026-09-26,Insurance,251-500
-C007,Northgate Technologies,Growth,150,2026-03-30,2026-10-09,Hospitality,251-500
-C008,Blue Works,Pro,545,2026-01-04,2026-05-01,Legal Services,51-100
-C009,Westbrook Ventures,Enterprise,1665,2026-03-18,2026-09-23,Real Estate,1001+
-C010,Ridgeline Collective,Pro,355,2026-03-23,2026-09-23,Education,251-500
-C011,Granite Solutions,Growth,155,2026-03-20,2026-09-21,Professional Services,501-1000
-C012,Clearwater Holdings,Growth,245,2026-03-08,2026-10-12,Manufacturing,51-100
-C013,Granite Technologies,Pro,435,2026-01-29,2026-06-19,Telecommunications,1001+
-C014,Westbrook Collective,Pro,655,2026-01-06,2026-05-12,Insurance,1-50
-C015,Marlowe Group,Growth,125,2026-03-23,2026-09-24,Media & Entertainment,1-50
-C016,Lumen Studio,Pro,560,2026-01-03,2026-04-06,Media & Entertainment,1-50
-C017,Copper Analytics,Growth,95,2026-04-11,2026-10-16,Nonprofit,51-100
-C018,Longview Collective,Enterprise,1545,2026-03-16,2026-09-21,Logistics,501-1000
-C019,Orbit Networks,Growth,165,2026-03-13,2026-10-12,Media & Entertainment,1001+
-C020,Harbor Ventures,Enterprise,1420,2026-01-12,2026-06-07,Professional Services,51-100
-C021,Cedar Holdings,Growth,160,2026-01-20,2026-06-10,Nonprofit,1001+
-C022,Harbor Studio,Growth,255,2026-03-30,2026-10-02,Legal Services,1001+
-C023,Summit Solutions,Pro,460,2026-04-11,2026-10-11,Energy,501-1000
-C024,Pacific Partners,Growth,150,2026-04-03,2026-09-30,Professional Services,501-1000
-C025,Marlowe Partners,Pro,505,2026-04-10,2026-10-18,Insurance,101-250
-C026,Atlas Networks,Pro,645,2026-04-01,2026-10-10,Legal Services,101-250
-C027,Highland Group,Growth,75,2026-03-17,2026-09-21,Energy,51-100
-C028,Juniper Group,Growth,85,2026-04-02,2026-10-02,Education,1-50
-C029,Longview Holdings,Enterprise,1465,2026-03-18,2026-09-21,FinTech,251-500
-C030,Orbit Works,Growth,125,2026-05-02,2026-10-07,Hospitality,1001+
-C031,Sterling Analytics,Growth,90,2026-03-11,2026-10-12,Energy,1-50
-C032,Pioneer Networks,Pro,330,2026-04-15,2026-10-19,Nonprofit,251-500
-C033,Summit Holdings,Growth,160,2026-04-01,2026-10-02,Logistics,251-500
-C034,Anchor Collective,Pro,540,2026-04-07,2026-10-09,Nonprofit,51-100
-C035,Pacific Solutions,Enterprise,1765,2026-03-18,2026-10-19,Legal Services,1-50
-C036,Blue Holdings,Growth,125,2026-04-07,2026-08-05,Legal Services,1001+
-C037,Cascade Labs,Growth,190,2026-04-09,2026-10-15,Education,251-500
-C038,Orbit Partners,Pro,605,2026-04-26,2026-10-02,FinTech,251-500
-C039,Marlowe Works,Growth,215,2026-03-23,2026-09-27,Legal Services,501-1000
-C040,Copper Group,Pro,335,2026-04-18,2026-10-18,Energy,501-1000
-C041,Westbrook Works,Growth,230,2026-04-22,2026-08-16,Nonprofit,51-100
-C042,Granite Group,Growth,215,2026-08-14,2026-10-16,Healthcare,51-100
-C043,Pioneer Analytics,Growth,150,2026-04-17,2026-09-25,Media & Entertainment,501-1000
-C044,Harborview Solutions,Pro,615,2026-03-07,2026-10-06,Healthcare,251-500
-C045,Pioneer Partners,Pro,430,2026-04-17,2026-10-17,Insurance,251-500
-C046,Redwood Systems,Growth,205,2026-03-21,2026-09-23,Real Estate,1-50
-C047,Lumen Technologies,Growth,195,2026-03-15,2026-10-14,Logistics,101-250
-C048,Lakeside Studio,Enterprise,1535,2026-01-01,2026-04-03,Real Estate,101-250
-C049,Harborview Networks,Growth,105,2026-04-17,2026-10-19,Logistics,1-50
-C050,Delta Solutions,Enterprise,1425,2026-04-07,2026-10-14,Logistics,1001+
+C001,Ironclad Solutions,Pro,305,2026-05-02,2026-09-30,Manufacturing,501-1000
+C002,Harbor Solutions,Growth,225,2026-04-26,2026-10-25,Telecommunications,251-500
+C003,Silverline Analytics,Growth,110,2026-03-21,2026-09-28,FinTech,101-250
+C004,Copper Collective,Growth,90,2026-04-07,2026-10-07,Logistics,501-1000
+C005,Pacific Industries,Pro,580,2026-01-15,2026-07-05,Nonprofit,1-50
+C006,River Solutions,Growth,110,2026-04-24,2026-10-01,Insurance,251-500
+C007,Northgate Technologies,Growth,150,2026-04-04,2026-10-14,Hospitality,251-500
+C008,Blue Works,Pro,545,2026-01-09,2026-05-06,Legal Services,51-100
+C009,Westbrook Ventures,Enterprise,1665,2026-03-23,2026-09-28,Real Estate,1001+
+C010,Ridgeline Collective,Pro,355,2026-03-28,2026-09-28,Education,251-500
+C011,Granite Solutions,Growth,155,2026-03-25,2026-09-26,Professional Services,501-1000
+C012,Clearwater Holdings,Growth,245,2026-03-13,2026-10-17,Manufacturing,51-100
+C013,Granite Technologies,Pro,435,2026-02-03,2026-06-24,Telecommunications,1001+
+C014,Westbrook Collective,Pro,655,2026-01-11,2026-05-17,Insurance,1-50
+C015,Marlowe Group,Growth,125,2026-03-28,2026-09-29,Media & Entertainment,1-50
+C016,Lumen Studio,Pro,560,2026-01-08,2026-04-11,Media & Entertainment,1-50
+C017,Copper Analytics,Growth,95,2026-04-16,2026-10-21,Nonprofit,51-100
+C018,Longview Collective,Enterprise,1545,2026-03-21,2026-09-26,Logistics,501-1000
+C019,Orbit Networks,Growth,165,2026-03-18,2026-10-17,Media & Entertainment,1001+
+C020,Harbor Ventures,Enterprise,1420,2026-01-17,2026-06-12,Professional Services,51-100
+C021,Cedar Holdings,Growth,160,2026-01-25,2026-06-15,Nonprofit,1001+
+C022,Harbor Studio,Growth,255,2026-04-04,2026-10-07,Legal Services,1001+
+C023,Summit Solutions,Pro,460,2026-04-16,2026-10-16,Energy,501-1000
+C024,Pacific Partners,Growth,150,2026-04-08,2026-10-05,Professional Services,501-1000
+C025,Marlowe Partners,Pro,505,2026-04-15,2026-10-23,Insurance,101-250
+C026,Atlas Networks,Pro,645,2026-04-06,2026-10-15,Legal Services,101-250
+C027,Highland Group,Growth,75,2026-03-22,2026-09-26,Energy,51-100
+C028,Juniper Group,Growth,85,2026-04-07,2026-10-07,Education,1-50
+C029,Longview Holdings,Enterprise,1465,2026-03-23,2026-09-26,FinTech,251-500
+C030,Orbit Works,Growth,125,2026-05-07,2026-10-12,Hospitality,1001+
+C031,Sterling Analytics,Growth,90,2026-03-16,2026-10-17,Energy,1-50
+C032,Pioneer Networks,Pro,330,2026-04-20,2026-10-24,Nonprofit,251-500
+C033,Summit Holdings,Growth,160,2026-04-06,2026-10-07,Logistics,251-500
+C034,Anchor Collective,Pro,540,2026-04-12,2026-10-14,Nonprofit,51-100
+C035,Pacific Solutions,Enterprise,1765,2026-03-23,2026-10-24,Legal Services,1-50
+C036,Blue Holdings,Growth,125,2026-04-12,2026-08-10,Legal Services,1001+
+C037,Cascade Labs,Growth,190,2026-04-14,2026-10-20,Education,251-500
+C038,Orbit Partners,Pro,605,2026-05-01,2026-10-07,FinTech,251-500
+C039,Marlowe Works,Growth,215,2026-03-28,2026-10-02,Legal Services,501-1000
+C040,Copper Group,Pro,335,2026-04-23,2026-10-23,Energy,501-1000
+C041,Westbrook Works,Growth,230,2026-04-27,2026-08-21,Nonprofit,51-100
+C042,Granite Group,Growth,215,2026-08-19,2026-10-21,Healthcare,51-100
+C043,Pioneer Analytics,Growth,150,2026-04-22,2026-09-30,Media & Entertainment,501-1000
+C044,Harborview Solutions,Pro,615,2026-03-12,2026-10-11,Healthcare,251-500
+C045,Pioneer Partners,Pro,430,2026-04-22,2026-10-22,Insurance,251-500
+C046,Redwood Systems,Growth,205,2026-03-26,2026-09-28,Real Estate,1-50
+C047,Lumen Technologies,Growth,195,2026-03-20,2026-10-19,Logistics,101-250
+C048,Lakeside Studio,Enterprise,1535,2026-01-06,2026-04-08,Real Estate,101-250
+C049,Harborview Networks,Growth,105,2026-04-22,2026-10-24,Logistics,1-50
+C050,Delta Solutions,Enterprise,1425,2026-04-12,2026-10-19,Logistics,1001+

@@ -59,6 +59,7 @@ app/
   api/investigate/route.ts POST investigates one customer; token-guarded
   api/outreach/route.ts    POST drafts a message, or records a decision
   globals.css              Design tokens, light palette
+  icon.svg                 Favicon: a declining line with the endpoint flagged
 components/
   CustomerTable.tsx        'use client' — sort / filter / search
   UsageChart.tsx           'use client' — inline SVG + hover tooltip

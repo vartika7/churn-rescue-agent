@@ -43,7 +43,11 @@ CREATE TABLE public.usage_daily (
     logins integer NOT NULL,
     sessions integer NOT NULL,
     key_actions integer NOT NULL,
-    feature_usage integer NOT NULL
+    feature_usage integer NOT NULL,
+    -- One row per customer per day. This was present in the live database but
+    -- missing here, which is how shift_dates.sql came to violate a constraint
+    -- the committed DDL did not mention.
+    UNIQUE (customer_id, date)
 );
 
 CREATE TABLE public.support_tickets (
