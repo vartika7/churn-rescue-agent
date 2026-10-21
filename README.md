@@ -389,9 +389,9 @@ construction. It computes its own offset and is a no-op when already aligned.
 
 Run it a few days before any demo rather than months ahead: renewals sit within
 30 days of the data end, so the picture is good for roughly a fortnight after a
-shift and degrades after that. As of 2026-09-22, 4 active accounts show an
-overdue renewal and 16 more are inside the 14-day amber window — half the book
-reading as urgent is the drift, not a bug.
+shift and degrades after that. Freshly shifted to 2026-10-31, the active book
+reads 0 overdue, 9 amber and 31 later. When a large share of it looks urgent,
+that is the drift rather than a bug.
 
 **A passed renewal is not churn.** The active/Lost split reads
 `customer_outcomes.outcome` and nothing else. A retained account whose renewal
@@ -630,9 +630,9 @@ The alternative was to let those five keep late-2025 signups, which the data
 would have supported. Forcing 2026 was a deliberate choice, not a constraint the
 incoherence required.
 
-A related consequence: with every signup in 2026 and all usage ending
-2026-09-20, tenure is now close to collinear with "when this account's records
-start", so it carries little independent signal. Worth remembering before
+A related consequence: with every signup in the same year as the data and all
+usage ending on one date, tenure is close to collinear with "when this
+account's records start", so it carries little independent signal. Worth remembering before
 treating tenure as a feature.
 
 ### Renewal dates, and this dataset's shelf life
@@ -652,21 +652,25 @@ The side effect is that every active renewal landed in one November band,
 because billing is roughly monthly and usage data ends 2026-10-31. Countdowns
 read the real clock, so the buckets move:
 
-| as of      | overdue | amber ≤14d | 15-45d | 46d+ | range    |
-| ---------- | ------- | ---------- | ------ | ---- | -------- |
-| 2026-09-18 | 0       | 0          | 4      | 36   | 44-73d   |
-| +30d       | 0       | 4          | 36     | 0    | 14-43d   |
-| +60d       | 20      | 20         | 0      | 0    | -16-13d  |
-| +90d       | 40      | 0          | 0      | 0    | -46--17d |
+Measured on 2026-10-21, with the data shifted to end 2026-10-31 and every
+active renewal falling between 2026-11-01 and 2026-11-30:
 
-**So the data has a shelf life.** Nothing is amber today, and by about 90 days
-out every active account reads overdue. Before demoing on a given date, check
+| as of      | overdue | amber ≤14d | 15-45d | 46d+ |
+| ---------- | ------- | ---------- | ------ | ---- |
+| 2026-10-21 | 0       | 9          | 31     | 0    |
+| +30d       | 24      | 16         | 0      | 0    |
+| +60d       | 40      | 0          | 0      | 0    |
+| +90d       | 40      | 0          | 0      | 0    |
+
+**So the data has a shelf life of roughly a month.** By 60 days past a shift
+every active account reads overdue. Before demoing on a given date, check
 where that date falls in the table. The durable fix is to spread `renewal_date`
 over a wider horizon rather than deriving it from the last charge, which by
 construction bunches them into a single month.
 
-C041's `outcome_date` of 2026-09-26 is intentionally left as-is. With countdowns
-on the real clock it needs no separate fix.
+C041's `outcome_date` is intentionally left as-is rather than corrected. With
+countdowns on the real clock it needs no separate fix, and quoting the literal
+date here would go stale at the next shift.
 
 ## Deployment (Vercel)
 

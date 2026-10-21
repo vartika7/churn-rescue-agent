@@ -39,7 +39,7 @@ with cases that cannot fail.
 | Escalated beyond the band | 0/6 | Not a failure; see below |
 | De-escalated below the band | 0/6 | Talking a CSM out of looking at a flagged account |
 | Uncertainty claimed correctly | 6/6 | It invented a root cause on thin evidence, or refused on rich evidence |
-| Mean distinct evidence cited | 9.7 of ~12 available | A low number means it fixated on one signal |
+| Mean distinct evidence cited | 7.8 of ~12 available | A low number means it fixated on one signal |
 
 ### Per account
 

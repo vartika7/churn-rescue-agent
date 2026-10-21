@@ -125,7 +125,7 @@ label.
 ### Grounding is checked, not hoped for
 
 Every piece of evidence carries a stable id — `usage.recent_trend_30d`,
-`T0029`, `billing.2026-09-02` — and the model must cite ids. A citation that
+`T0029`, `billing.2026-10-30` — and the model must cite ids. A citation that
 does not resolve is a fabrication, and the whole investigation is rejected
 rather than repaired: silently dropping a bad citation would leave a plausible
 sentence with nothing behind it, which is worse than no answer.
